@@ -25,9 +25,7 @@ class DeviceNotFoundError(RaspbotError):
     """Raised when the I2C device cannot be found on the bus."""
 
     def __init__(self, address: int, bus: int) -> None:
-        super().__init__(
-            f"No device at I2C address 0x{address:02X} on bus {bus}"
-        )
+        super().__init__(f"No device at I2C address 0x{address:02X} on bus {bus}")
         self.address = address
         self.bus = bus
 

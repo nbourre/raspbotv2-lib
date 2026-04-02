@@ -3,8 +3,8 @@ Servo control module.
 
 Controls pan/tilt servo channels via I2C register 0x02.
 
-* Servo 1 (PAN):  0–180°
-* Servo 2 (TILT): 0–110° (hardware limited)
+* Servo 1 (PAN):  0-180°
+* Servo 2 (TILT): 0-110° (hardware limited)
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 
 from raspbot.bus import I2CBus
-from raspbot.types import Reg, ServoId, SERVO_TILT_MAX_ANGLE
+from raspbot.types import SERVO_TILT_MAX_ANGLE, Reg, ServoId
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +34,7 @@ class Servo:
     def __init__(self, bus: I2CBus, servo_id: ServoId | int) -> None:
         self._bus = bus
         self._id = int(servo_id)
-        self._max_angle = (
-            SERVO_TILT_MAX_ANGLE if self._id == ServoId.TILT else _SERVO_MAX_ANGLE
-        )
+        self._max_angle = SERVO_TILT_MAX_ANGLE if self._id == ServoId.TILT else _SERVO_MAX_ANGLE
 
     @property
     def max_angle(self) -> int:
@@ -51,7 +49,7 @@ class Servo:
         Parameters
         ----------
         angle:
-            Target angle in degrees (0–180, or 0–110 for the tilt servo).
+            Target angle in degrees (0-180, or 0-110 for the tilt servo).
         """
         angle = max(_SERVO_MIN_ANGLE, min(self._max_angle, int(angle)))
         logger.debug("Servo %d -> %d°", self._id, angle)

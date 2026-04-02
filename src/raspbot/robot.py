@@ -16,6 +16,7 @@ as attributes, so callers don't need to wire bus instances together manually::
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from raspbot.actuators.buzzer import Buzzer
@@ -78,9 +79,7 @@ class Robot:
         self.ir = IRReceiver(self._bus)
         self.light_effects = LightEffects(self.leds)
 
-        logger.debug(
-            "Robot initialised (bus=%d, addr=0x%02X)", i2c_bus, i2c_address
-        )
+        logger.debug("Robot initialised (bus=%d, addr=0x%02X)", i2c_bus, i2c_address)
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -88,28 +87,20 @@ class Robot:
 
     def close(self) -> None:
         """Safely stop all actuators and release the I2C bus."""
-        try:
+        with contextlib.suppress(Exception):
             self.motors.stop()
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             self.leds.off_all()
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             self.buzzer.off()
-        except Exception:
-            pass
         self._bus.close()
         logger.debug("Robot closed")
 
-    def __enter__(self) -> "Robot":
+    def __enter__(self) -> Robot:
         return self
 
     def __exit__(self, *_: object) -> None:
         self.close()
 
     def __repr__(self) -> str:
-        return (
-            f"Robot(bus={self._bus._bus_num}, addr=0x{self._bus._address:02X})"
-        )
+        return f"Robot(bus={self._bus._bus_num}, addr=0x{self._bus._address:02X})"

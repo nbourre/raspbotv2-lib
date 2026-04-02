@@ -16,15 +16,15 @@ import time
 import pytest
 
 from raspbot import Robot
-from raspbot.types import LedColor, MotorDirection, MotorId, ServoId
-
+from raspbot.types import LedColor, MotorId
 
 # ---------------------------------------------------------------------------
-# Shared fixture — one Robot instance per test, cleaned up after each test
+# Shared fixture - one Robot instance per test, cleaned up after each test
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
-def bot() -> "Robot":
+def bot() -> Robot:
     """Open a real Robot connection and close it after the test."""
     robot = Robot()
     yield robot
@@ -32,8 +32,9 @@ def bot() -> "Robot":
 
 
 # ---------------------------------------------------------------------------
-# Smoke tests — verify the device responds without crashing
+# Smoke tests - verify the device responds without crashing
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.hardware
 def test_robot_opens_and_closes() -> None:
@@ -67,15 +68,16 @@ def test_ir_receiver_enable_disable(bot: Robot) -> None:
     """IR receiver can be enabled, polled, and disabled without error."""
     bot.ir.enable()
     time.sleep(0.1)
-    # read_keycode returns int or None — either is valid here
+    # read_keycode returns int or None - either is valid here
     result = bot.ir.read_keycode()
     assert result is None or isinstance(result, int)
     bot.ir.disable()
 
 
 # ---------------------------------------------------------------------------
-# Actuator smoke tests — brief on/off to confirm register writes succeed
+# Actuator smoke tests - brief on/off to confirm register writes succeed
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.hardware
 def test_buzzer_beeps(bot: Robot) -> None:
@@ -117,7 +119,7 @@ def test_servo_tilt_clamps_at_110(bot: Robot) -> None:
 
 @pytest.mark.hardware
 def test_motors_brief_forward_stop(bot: Robot) -> None:
-    """All motors spin forward briefly then stop — robot should move slightly."""
+    """All motors spin forward briefly then stop - robot should move slightly."""
     bot.motors.forward(speed=80)
     time.sleep(0.3)
     bot.motors.stop()

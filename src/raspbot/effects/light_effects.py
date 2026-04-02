@@ -10,13 +10,12 @@ cleared from another thread to stop the effect gracefully.
 from __future__ import annotations
 
 import logging
-import math
 import random
 import threading
 import time
 
 from raspbot.actuators.led_bar import LedBar
-from raspbot.types import LedColor, NUM_LEDS
+from raspbot.types import NUM_LEDS, LedColor
 
 logger = logging.getLogger(__name__)
 
@@ -101,13 +100,13 @@ class LightEffects:
             Delay (seconds) between brightness steps.
         """
         _COLOR_MAP = {
-            LedColor.RED:    (1, 0, 0),
-            LedColor.GREEN:  (0, 1, 0),
-            LedColor.BLUE:   (0, 0, 1),
+            LedColor.RED: (1, 0, 0),
+            LedColor.GREEN: (0, 1, 0),
+            LedColor.BLUE: (0, 0, 1),
             LedColor.YELLOW: (1, 1, 0),
             LedColor.PURPLE: (1, 0, 1),
-            LedColor.CYAN:   (0, 1, 1),
-            LedColor.WHITE:  (1, 1, 1),
+            LedColor.CYAN: (0, 1, 1),
+            LedColor.WHITE: (1, 1, 1),
         }
         factors = _COLOR_MAP.get(color, (1, 1, 1))
         brightness = 0

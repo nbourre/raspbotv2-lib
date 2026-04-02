@@ -53,12 +53,12 @@ class Motors:
         Parameters
         ----------
         motor_id:
-            Which motor to control (0–3 or :class:`~raspbot.types.MotorId`).
+            Which motor to control (0-3 or :class:`~raspbot.types.MotorId`).
         direction:
             :attr:`~raspbot.types.MotorDirection.FORWARD` (0) or
             :attr:`~raspbot.types.MotorDirection.REVERSE` (1).
         speed:
-            PWM duty-cycle 0–255 (0 = stopped, 255 = full speed).
+            PWM duty-cycle 0-255 (0 = stopped, 255 = full speed).
         """
         motor_id = int(motor_id)
         direction = int(direction) if int(direction) in (0, 1) else 0

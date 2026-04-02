@@ -26,7 +26,7 @@ class MotorDirection(IntEnum):
 class ServoId(IntEnum):
     """Identifies a servo channel."""
 
-    PAN = 1   # Horizontal / pan axis
+    PAN = 1  # Horizontal / pan axis
     TILT = 2  # Vertical / tilt axis (hardware limited to 110°)
 
 

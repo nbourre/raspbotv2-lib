@@ -33,13 +33,13 @@ class LineState:
     Attributes
     ----------
     x1:
-        Left-most sensor — ``True`` when on a dark line.
+        Left-most sensor - ``True`` when on a dark line.
     x2:
         Second sensor from left.
     x3:
         Third sensor from left.
     x4:
-        Right-most sensor — ``True`` when on a dark line.
+        Right-most sensor - ``True`` when on a dark line.
     raw:
         Raw byte from the sensor register.
     """

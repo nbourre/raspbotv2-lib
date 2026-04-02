@@ -84,7 +84,7 @@ class UltrasonicSensor:
         """Return the current distance reading in centimetres."""
         return self.read_mm() / 10.0
 
-    def __enter__(self) -> "UltrasonicSensor":
+    def __enter__(self) -> UltrasonicSensor:
         self.enable()
         return self
 

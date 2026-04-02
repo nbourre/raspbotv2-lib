@@ -1,5 +1,5 @@
 """
-raspbot — Python library for controlling the Yahboom Raspbot V2 robot car.
+raspbot - Python library for controlling the Yahboom Raspbot V2 robot car.
 
 Quick start::
 
@@ -13,7 +13,6 @@ Quick start::
 
 from __future__ import annotations
 
-from raspbot.robot import Robot
 from raspbot.exceptions import (
     DeviceNotFoundError,
     HardwareNotReadyError,
@@ -21,6 +20,7 @@ from raspbot.exceptions import (
     OLEDError,
     RaspbotError,
 )
+from raspbot.robot import Robot
 from raspbot.types import (
     LedColor,
     LightEffect,

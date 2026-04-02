@@ -15,12 +15,12 @@ Replaces the original `Raspbot_Lib` and `yahboom_oled` libraries with a maintain
 | Ultrasonic distance sensor | `raspbot.sensors.ultrasonic` |
 | 4-channel line tracker | `raspbot.sensors.line_tracker` |
 | IR remote receiver | `raspbot.sensors.ir` |
-| SSD1306 128×32 OLED display | `raspbot.display.oled` *(optional)* |
+| SSD1306 128x32 OLED display | `raspbot.display.oled` *(optional)* |
 | LED animation effects | `raspbot.effects.light_effects` |
 
 ## Installation
 
-**Core package** (motors, sensors, buzzer, LEDs — no OLED):
+**Core package** (motors, sensors, buzzer, LEDs - no OLED):
 
 ```bash
 pip install raspbot
@@ -178,9 +178,9 @@ browse `src/raspbot/` for the full API.
 | Symptom | Likely cause / fix |
 |---|---|
 | `DeviceNotFoundError: No device at I2C address 0x2B` | I2C not enabled, or wiring issue. Run `i2cdetect -y 1`. |
-| `PermissionError` on `/dev/i2c-1` | User not in `i2c` group — see Prerequisites. |
+| `PermissionError` on `/dev/i2c-1` | User not in `i2c` group - see Prerequisites. |
 | OLED import error about `luma.oled` | Install OLED extras: `pip install "raspbot[oled]"` |
-| Motors don't move | Check power supply — motors need a separate 5 V supply. |
+| Motors don't move | Check power supply - motors need a separate 5 V supply. |
 
 ## Migration from `Raspbot_Lib` / `yahboom_oled`
 

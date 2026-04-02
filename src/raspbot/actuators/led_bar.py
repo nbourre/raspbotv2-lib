@@ -5,7 +5,7 @@ The Raspbot V2 carries 14 WS2812 NeoPixel LEDs controlled via I2C registers
 0x03 (all LEDs), 0x04 (single LED), 0x08 (brightness all), 0x09 (brightness
 single).
 
-Colour *codes* (0–6) are hardware-defined indexed colours.  For direct RGB
+Colour *codes* (0-6) are hardware-defined indexed colours.  For direct RGB
 brightness control use the ``set_brightness`` / ``set_brightness_all`` methods.
 """
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 
 from raspbot.bus import I2CBus
-from raspbot.types import LedColor, NUM_LEDS, Reg
+from raspbot.types import NUM_LEDS, LedColor, Reg
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class LedBar:
         self._bus = bus
 
     # ------------------------------------------------------------------
-    # Indexed-colour API (0–6)
+    # Indexed-colour API (0-6)
     # ------------------------------------------------------------------
 
     def set_all(self, color: LedColor | int, *, on: bool = True) -> None:
@@ -61,7 +61,7 @@ class LedBar:
         Parameters
         ----------
         index:
-            LED index 0–13.
+            LED index 0-13.
         color:
             One of the 7 predefined :class:`~raspbot.types.LedColor` codes.
         on:
@@ -89,7 +89,7 @@ class LedBar:
         Parameters
         ----------
         r, g, b:
-            Red, green, blue channel brightness 0–255.
+            Red, green, blue channel brightness 0-255.
         """
         r, g, b = _clamp_u8(r), _clamp_u8(g), _clamp_u8(b)
         logger.debug("LED brightness all R=%d G=%d B=%d", r, g, b)
@@ -101,9 +101,9 @@ class LedBar:
         Parameters
         ----------
         index:
-            LED index 0–13.
+            LED index 0-13.
         r, g, b:
-            Red, green, blue channel brightness 0–255.
+            Red, green, blue channel brightness 0-255.
         """
         r, g, b = _clamp_u8(r), _clamp_u8(g), _clamp_u8(b)
         logger.debug("LED brightness %d R=%d G=%d B=%d", index, r, g, b)

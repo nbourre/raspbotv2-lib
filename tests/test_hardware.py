@@ -20,10 +20,10 @@ from raspbot.sensors.line_tracker import LineTracker
 from raspbot.sensors.ultrasonic import UltrasonicSensor
 from raspbot.types import LedColor, MotorDirection, MotorId, Reg, ServoId
 
-
 # ---------------------------------------------------------------------------
 # Motors
 # ---------------------------------------------------------------------------
+
 
 class TestMotors:
     def test_set_forward(self, mock_bus: MagicMock) -> None:
@@ -65,6 +65,7 @@ class TestMotors:
 # Servo
 # ---------------------------------------------------------------------------
 
+
 class TestServo:
     def test_set_angle(self, mock_bus: MagicMock) -> None:
         s = Servo(mock_bus, ServoId.PAN)
@@ -98,6 +99,7 @@ class TestServo:
 # Buzzer
 # ---------------------------------------------------------------------------
 
+
 class TestBuzzer:
     def test_on(self, mock_bus: MagicMock) -> None:
         b = Buzzer(mock_bus)
@@ -121,13 +123,14 @@ class TestBuzzer:
         b = Buzzer(mock_bus)
         with patch("raspbot.actuators.buzzer.time.sleep"):
             b.pattern(0.1, 0.1, 3)
-        # 3 beeps × 2 calls (on + off) = 6
+        # 3 beeps x 2 calls (on + off) = 6
         assert mock_bus.write_block_data.call_count == 6
 
 
 # ---------------------------------------------------------------------------
 # LedBar
 # ---------------------------------------------------------------------------
+
 
 class TestLedBar:
     def test_set_all_on(self, mock_bus: MagicMock) -> None:
@@ -171,6 +174,7 @@ class TestLedBar:
 # UltrasonicSensor
 # ---------------------------------------------------------------------------
 
+
 class TestUltrasonic:
     def test_read_mm_combines_high_and_low(self, mock_bus: MagicMock) -> None:
         sensor = UltrasonicSensor(mock_bus)
@@ -206,6 +210,7 @@ class TestUltrasonic:
 # LineTracker
 # ---------------------------------------------------------------------------
 
+
 class TestLineTracker:
     def test_read_parses_byte(self, mock_bus: MagicMock) -> None:
         tracker = LineTracker(mock_bus)
@@ -226,6 +231,7 @@ class TestLineTracker:
 # ---------------------------------------------------------------------------
 # IRReceiver
 # ---------------------------------------------------------------------------
+
 
 class TestIRReceiver:
     def test_enable(self, mock_bus: MagicMock) -> None:

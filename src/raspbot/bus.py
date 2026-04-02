@@ -7,19 +7,28 @@ callers never need to import smbus2 directly.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import sys
-from typing import Sequence
-
-# smbus2 is a Linux-only package that depends on fcntl.  Guard the import so
-# that the module can be loaded on non-Linux systems (e.g. for unit testing).
-if sys.platform != "win32":
-    import smbus2
-else:  # pragma: no cover
-    smbus2 = None  # type: ignore[assignment]
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 from raspbot.exceptions import DeviceNotFoundError, I2CError
 from raspbot.types import RASPBOT_I2C_ADDRESS, RASPBOT_I2C_BUS
+
+# smbus2 is a Linux-only package that depends on fcntl.  Guard the import so
+# that the module can be loaded on non-Linux systems (e.g. for unit testing).
+if TYPE_CHECKING:
+    import smbus2 as smbus2_mod  # noqa: F401  (type stubs only)
+
+_SMBus: Any  # set below depending on platform
+
+if sys.platform != "win32":
+    import smbus2
+
+    _SMBus = smbus2.SMBus
+else:  # pragma: no cover
+    _SMBus = None
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +52,7 @@ class I2CBus:
         self._address = address
         self._bus_num = bus
         try:
-            self._bus = smbus2.SMBus(bus)
+            self._bus = _SMBus(bus)
         except OSError as exc:
             raise DeviceNotFoundError(address, bus) from exc
 
@@ -72,14 +81,14 @@ class I2CBus:
     def read_block_data(self, reg: int, length: int) -> list[int]:
         """Read *length* bytes starting at *reg* and return them as a list."""
         try:
-            return self._bus.read_i2c_block_data(self._address, reg, length)
+            return list(self._bus.read_i2c_block_data(self._address, reg, length))
         except OSError as exc:
             raise I2CError(f"read_block_data(reg=0x{reg:02X}, len={length})", exc) from exc
 
     def read_byte_data(self, reg: int) -> int:
         """Read a single byte from *reg*."""
         try:
-            return self._bus.read_byte_data(self._address, reg)
+            return int(self._bus.read_byte_data(self._address, reg))
         except OSError as exc:
             raise I2CError(f"read_byte_data(reg=0x{reg:02X})", exc) from exc
 
@@ -89,12 +98,10 @@ class I2CBus:
 
     def close(self) -> None:
         """Release the underlying bus file descriptor."""
-        try:
+        with contextlib.suppress(OSError):
             self._bus.close()
-        except OSError:
-            pass
 
-    def __enter__(self) -> "I2CBus":
+    def __enter__(self) -> I2CBus:
         return self
 
     def __exit__(self, *_: object) -> None:

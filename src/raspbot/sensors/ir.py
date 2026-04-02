@@ -54,7 +54,7 @@ class IRReceiver:
         Returns
         -------
         int or None
-            The key-code byte (0–255), or ``None`` if no code is available
+            The key-code byte (0-255), or ``None`` if no code is available
             (register returns 0 when idle).
         """
         if not self._enabled:
@@ -68,7 +68,7 @@ class IRReceiver:
     # Context manager support
     # ------------------------------------------------------------------
 
-    def __enter__(self) -> "IRReceiver":
+    def __enter__(self) -> IRReceiver:
         self.enable()
         return self
 

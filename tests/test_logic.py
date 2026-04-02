@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import pytest
-
 from raspbot.exceptions import DeviceNotFoundError, I2CError, OLEDError, RaspbotError
 from raspbot.sensors.line_tracker import LineState, _parse_line_byte
 from raspbot.types import LedColor, MotorDirection, MotorId, ServoId
 
-
 # ---------------------------------------------------------------------------
 # Exception hierarchy
 # ---------------------------------------------------------------------------
+
 
 class TestExceptions:
     def test_i2c_error_is_raspbot_error(self) -> None:
@@ -41,6 +39,7 @@ class TestExceptions:
 # ---------------------------------------------------------------------------
 # Type enumerations
 # ---------------------------------------------------------------------------
+
 
 class TestMotorId:
     def test_values(self) -> None:
@@ -76,6 +75,7 @@ class TestLedColor:
 # ---------------------------------------------------------------------------
 # LineState / _parse_line_byte
 # ---------------------------------------------------------------------------
+
 
 class TestParseLine:
     def test_all_off(self) -> None:
