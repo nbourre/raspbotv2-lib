@@ -17,6 +17,7 @@ from collections.abc import Generator
 import pytest
 
 from raspbot import Robot
+from raspbot.display.oled import OLEDDisplay
 from raspbot.types import LedColor, MotorId
 
 # ---------------------------------------------------------------------------
@@ -133,3 +134,77 @@ def test_motors_individual_drive(bot: Robot) -> None:
         bot.motors.drive(motor, 80)
         time.sleep(0.1)
         bot.motors.drive(motor, 0)
+
+
+# ---------------------------------------------------------------------------
+# OLED display tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def oled() -> Generator[OLEDDisplay, None, None]:
+    """Open a real OLEDDisplay connection and close it after the test."""
+    display = OLEDDisplay()
+    started = display.begin()
+    if not started:
+        pytest.skip("OLED display not found on I2C bus")
+    yield display
+    display.clear(refresh=True)
+
+
+@pytest.mark.hardware
+def test_oled_begin(oled: OLEDDisplay) -> None:
+    """OLEDDisplay.begin() succeeds and the device is ready."""
+    # If we reach this point the fixture did not skip, so begin() returned True.
+    assert oled._device is not None
+    assert oled._draw is not None
+
+
+@pytest.mark.hardware
+def test_oled_clear(oled: OLEDDisplay) -> None:
+    """clear() blanks the display without raising."""
+    oled.clear(refresh=True)
+
+
+@pytest.mark.hardware
+def test_oled_add_text(oled: OLEDDisplay) -> None:
+    """add_text() draws a string at given pixel coordinates."""
+    oled.clear()
+    oled.add_text(0, 0, "Hello Pi", refresh=True)
+    time.sleep(0.5)
+
+
+@pytest.mark.hardware
+def test_oled_add_line_all_four_lines(oled: OLEDDisplay) -> None:
+    """All four logical lines can be written and displayed."""
+    oled.clear()
+    for i in range(1, 5):
+        oled.add_line(f"Line {i}", line=i)
+    oled.refresh()
+    time.sleep(1.0)
+
+
+@pytest.mark.hardware
+def test_oled_add_line_out_of_range_does_not_raise(oled: OLEDDisplay) -> None:
+    """add_line() with an out-of-range line number is silently ignored."""
+    oled.add_line("ignored", line=0)
+    oled.add_line("ignored", line=5)
+
+
+@pytest.mark.hardware
+def test_oled_refresh(oled: OLEDDisplay) -> None:
+    """refresh() pushes the framebuffer to the display without raising."""
+    oled.add_line("Refresh test", line=1)
+    oled.refresh()
+    time.sleep(0.3)
+
+
+@pytest.mark.hardware
+def test_oled_context_manager() -> None:
+    """OLEDDisplay used as a context manager initialises and clears cleanly."""
+    with OLEDDisplay() as display:
+        display.add_line("Context", line=1)
+        display.add_line("Manager", line=2)
+        display.refresh()
+        time.sleep(0.5)
+    # After __exit__ the display should be cleared (no exception expected)
