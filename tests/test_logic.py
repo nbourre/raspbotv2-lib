@@ -43,10 +43,10 @@ class TestExceptions:
 
 class TestMotorId:
     def test_values(self) -> None:
-        assert MotorId.L1 == 0
-        assert MotorId.L2 == 1
-        assert MotorId.R1 == 2
-        assert MotorId.R2 == 3
+        assert MotorId.L1.value == 0
+        assert MotorId.L2.value == 1
+        assert MotorId.R1.value == 2
+        assert MotorId.R2.value == 3
 
     def test_iteration(self) -> None:
         assert list(MotorId) == [MotorId.L1, MotorId.L2, MotorId.R1, MotorId.R2]
@@ -54,14 +54,14 @@ class TestMotorId:
 
 class TestMotorDirection:
     def test_values(self) -> None:
-        assert MotorDirection.FORWARD == 0
-        assert MotorDirection.REVERSE == 1
+        assert MotorDirection.FORWARD.value == 0
+        assert MotorDirection.REVERSE.value == 1
 
 
 class TestServoId:
     def test_values(self) -> None:
-        assert ServoId.PAN == 1
-        assert ServoId.TILT == 2
+        assert ServoId.PAN.value == 1
+        assert ServoId.TILT.value == 2
 
 
 class TestLedColor:
@@ -69,7 +69,7 @@ class TestLedColor:
         assert len(LedColor) == 7
 
     def test_red_is_zero(self) -> None:
-        assert LedColor.RED == 0
+        assert LedColor.RED.value == 0
 
 
 # ---------------------------------------------------------------------------

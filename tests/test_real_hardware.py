@@ -12,6 +12,7 @@ They are intentionally NOT run in CI or on development machines.
 from __future__ import annotations
 
 import time
+from collections.abc import Generator
 
 import pytest
 
@@ -24,7 +25,7 @@ from raspbot.types import LedColor, MotorId
 
 
 @pytest.fixture()
-def bot() -> Robot:
+def bot() -> Generator[Robot, None, None]:
     """Open a real Robot connection and close it after the test."""
     robot = Robot()
     yield robot
