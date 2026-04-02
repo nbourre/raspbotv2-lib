@@ -1,0 +1,482 @@
+class Raspbot():
+
+"""
+
+Raspberry Pi car control class, used to communicate with the Raspberry Pi car via I2C.
+
+"""
+
+
+def get_i2c_device(self, address, i2c_bus):
+
+"""
+
+Get the I2C device instance.
+
+
+Args:
+
+address (int): I2C device address.
+
+i2c_bus (int): I2C bus number.
+
+
+Returns:
+
+SMBus: I2C device instance.
+
+"""
+
+
+def __init__(self):
+
+"""
+
+Initialize the Raspbot instance and create an I2C device.
+
+"""
+
+
+def write_u8(self, reg, data):
+
+"""
+
+Write a byte of data to the specified register.
+
+
+Args:
+
+reg (int): register address.
+
+data (int): data to be written.
+
+"""
+
+
+def write_reg(self, reg):
+
+"""
+
+Command to write a byte to the device.
+
+
+Args:
+
+reg (int): command byte.
+
+"""
+
+
+def write_array(self, reg, data):
+
+"""
+
+Write a series of bytes of data to the specified register.
+
+
+Args:
+
+reg (int): register address.
+
+data (list): list of data to be written.
+
+"""
+
+
+def read_data_byte(self):
+
+"""
+
+Read a byte of data from the device.
+
+
+Returns:
+
+int: data read.
+
+"""
+
+
+def read_data_array(self, reg, length):
+
+"""
+
+Read a series of bytes of data from the specified register.
+
+
+Args:
+
+reg (int): register address.
+
+length (int): length of data to be read.
+
+
+Returns:
+
+list: list of data read.
+
+"""
+
+
+def Ctrl_Car(self, motor_id, motor_dir, motor_speed):
+
+"""
+
+Control the direction and speed of the motor.
+
+
+Args:
+
+motor_id (int): motor ID.
+
+motor_dir (int): Motor direction (0 is forward, 1 is reverse).
+
+motor_speed (int): Motor speed (0-255).
+
+"""
+
+
+def Ctrl_Muto(self, motor_id, motor_speed):
+
+"""
+
+Controls the motor forward and reverse, accepts speed values ••from -255 to 255.
+
+
+Args:
+
+motor_id (int): Motor ID.
+
+motor_speed (int): Motor speed (-255 to 255).
+
+"""
+
+
+def Ctrl_Servo(self, id, angle):
+
+"""
+
+Controls the angle of the servo.
+
+
+Args:
+
+id (int): Servo ID.
+
+angle (int): Servo angle (0-180 degrees).
+
+"""
+
+def Ctrl_WQ2812_ALL(self, state, color):
+
+"""
+
+Control the state and color of all LED lights.
+
+
+Args:
+
+state (int): The state of the light (0 is off, 1 is on).
+
+color (int): Color code.
+
+"""
+
+
+def Ctrl_WQ2812_Alone(self, number, state, color):
+
+"""
+
+Control the state and color of a single LED light.
+
+
+Args:
+
+number (int): The number of the light.
+
+state (int): The state of the light (0 is off, 1 is on).
+
+color (int): Color code.
+
+"""
+
+
+def Ctrl_WQ2812_brightness_ALL(self, R, G, B):
+
+"""
+
+Set the RGB brightness of all LED lights.
+
+
+Args:
+
+R (int): Red brightness (0-255).
+
+G (int): Green brightness (0-255).
+
+B (int): Blue brightness (0-255).
+
+"""
+
+
+def Ctrl_WQ2812_brightness_Alone(self, number, R, G, B):
+
+"""
+
+Set the RGB brightness of a single LED.
+
+
+Args:
+
+number (int): The number of the LED.
+
+R (int): Red brightness (0-255).
+
+G (int): Green brightness (0-255).
+
+B (int): Blue brightness (0-255).
+
+"""
+
+
+def Ctrl_IR_Switch(self, state):
+
+"""
+
+Control the on/off state of the infrared remote control.
+
+
+Args:
+
+state (int): Switch state (0 is off, 1 is on).
+
+"""
+
+
+def Ctrl_BEEP_Switch(self, state):
+
+"""
+
+Control the on/off state of the buzzer.
+
+
+Args:
+
+state (int): Switch state (0 is off, 1 is on).
+
+"""
+
+
+def Ctrl_Ulatist_Switch(self, state):
+
+"""
+
+Controls the switch state of the ultrasonic ranging module.
+
+
+Args:
+
+state (int): Switch state (0 is off, 1 is on).
+
+"""
+
+
+class LightShow():
+
+"""
+
+LED light effect control class, used to achieve various lighting effects.
+
+"""
+
+
+def __init__(self):
+
+"""
+
+Initialize the LightShow instance, set basic parameters and initialize the Raspberry Pi car control object.
+
+"""
+
+
+def execute_effect(self, effect_name, effect_duration, speed, current_color):
+
+"""
+
+Execute the specified lighting effect.
+
+
+Args:
+
+effect_name (str): Effect name.
+
+effect_duration (float): Effect duration (seconds).
+
+speed (float): Effect execution speed (seconds).
+
+current_color (int): Current color code.
+
+"""
+
+
+def turn_off_all_lights(self):
+
+"""
+
+Turn off all LED lights.
+
+"""
+
+
+def run_river_light(self, effect_duration, speed):
+
+"""
+
+Execute the running light effect.
+
+
+Args:
+
+effect_duration (float): Effect duration (seconds).
+
+speed (float): Effect execution speed (seconds).
+
+"""
+
+
+def breathing_light(self, effect_duration, speed, current_color):
+
+"""
+
+Execute the breathing light effect.
+
+
+Args:
+
+effect_duration (float): Effect duration (seconds).
+
+speed (float): Effect execution speed (seconds).
+
+current_color (int): Current color code.
+
+"""
+
+
+def random_running_light(self, effect_duration, speed):
+
+"""
+
+Execute the random running light effect.
+
+
+Args:
+
+effect_duration (float): Effect duration (seconds).
+
+speed (float): Effect execution speed (seconds).
+
+"""
+
+
+def starlight_shimmer(self, effect_duration, speed):
+
+"""
+
+Executes the starlight shimmer effect.
+
+
+Args:
+
+effect_duration (float): Effect duration (seconds).
+
+speed (float): Effect execution speed (seconds).
+
+"""
+
+
+def gradient_light(self, effect_duration, speed):
+
+"""
+
+Executes the gradient effect.
+
+
+Args:
+
+effect_duration (float): Effect duration (seconds).
+
+speed (float): Effect execution speed (seconds).
+
+"""
+
+
+def rgb_remix(self, val):
+
+"""
+
+RGB value mixing algorithm.
+
+
+Args:
+
+val (int): Input RGB value.
+
+
+Returns:
+
+int: RGB value after mixing.
+
+"""
+
+
+def rgb_remix_u8(self, r, g, b):
+
+"""
+
+RGB value mixing algorithm (for 8-bit values).
+
+
+Args:
+
+r (int): Red value.
+
+g (int): Green value.
+
+b (int): Blue value.
+
+
+Returns:
+
+tuple: RGB value after mixing.
+
+"""
+
+
+def calculate_breath_color(self, color_code, breath_count):
+
+"""
+
+Calculate the color value of the breathing light effect.
+
+
+Args:
+
+color_code (int): Color code.
+
+breath_count (int): Breath count.
+
+
+Returns:
+
+tuple: RGB color value.
+
+"""
+
+
+def stop(self):
+
+"""
+
+Stop the currently executing lighting effect.
+
+"""

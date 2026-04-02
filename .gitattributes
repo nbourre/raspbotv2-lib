@@ -1,0 +1,9 @@
+# Force LF line endings for all text files in the repo.
+# This prevents CRLF issues when the code runs on Linux (Raspberry Pi).
+* text=auto eol=lf
+
+# Explicitly mark binary files so git never mangles them.
+*.ttf binary
+*.TTC binary
+*.pyc binary
+*.whl binary
