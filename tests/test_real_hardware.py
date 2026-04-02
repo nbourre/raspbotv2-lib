@@ -76,6 +76,20 @@ def test_ir_receiver_enable_disable(bot: Robot) -> None:
     bot.ir.disable()
 
 
+@pytest.mark.hardware
+def test_button_reads_without_error(bot: Robot) -> None:
+    """Button state can be read and returns a bool."""
+    state = bot.button.is_pressed()
+    assert isinstance(state, bool)
+
+
+@pytest.mark.hardware
+def test_button_not_pressed_by_default(bot: Robot) -> None:
+    """Button reports not pressed when no one is touching it."""
+    # This assumes the test is run without pressing KEY1.
+    assert bot.button.is_pressed() is False
+
+
 # ---------------------------------------------------------------------------
 # Actuator smoke tests - brief on/off to confirm register writes succeed
 # ---------------------------------------------------------------------------

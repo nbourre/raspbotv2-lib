@@ -18,6 +18,7 @@ from raspbot.actuators.motors import Motors
 from raspbot.actuators.servo import Servo, ServoPair
 from raspbot.display.oled import OLED_HEIGHT, OLED_WIDTH, OLEDDisplay
 from raspbot.exceptions import OLEDError
+from raspbot.sensors.button import Button
 from raspbot.sensors.ir import IRReceiver
 from raspbot.sensors.line_tracker import LineTracker
 from raspbot.sensors.ultrasonic import UltrasonicSensor
@@ -413,3 +414,30 @@ class TestOLEDDisplay:
             # Simulate device going away after begin
             oled._device = None
         # No exception should propagate out of the with block
+
+
+# ---------------------------------------------------------------------------
+# Button
+# ---------------------------------------------------------------------------
+
+
+class TestButton:
+    def test_is_pressed_returns_true_when_register_is_1(
+        self, mock_bus: MagicMock
+    ) -> None:
+        mock_bus.read_block_data.return_value = [1]
+        btn = Button(mock_bus)
+        assert btn.is_pressed() is True
+
+    def test_is_pressed_returns_false_when_register_is_0(
+        self, mock_bus: MagicMock
+    ) -> None:
+        mock_bus.read_block_data.return_value = [0]
+        btn = Button(mock_bus)
+        assert btn.is_pressed() is False
+
+    def test_is_pressed_reads_correct_register(self, mock_bus: MagicMock) -> None:
+        mock_bus.read_block_data.return_value = [0]
+        btn = Button(mock_bus)
+        btn.is_pressed()
+        mock_bus.read_block_data.assert_called_once_with(Reg.BUTTON, 1)

@@ -19,7 +19,7 @@ I want to publish this package on PyPI so that it can be easily installed and us
   - [x] Ultrasonic distance → `raspbot.sensors.ultrasonic`
   - [x] OLED text rendering → `raspbot.display.oled`
   - [x] Line tracker → `raspbot.sensors.line_tracker`
-  - [ ] Button input *(not present on Raspbot V2 hardware - no register found)*
+  - [x] Button input → `raspbot.sensors.button` (KEY1, register 0x0D)
   - [x] Buzzer control → `raspbot.actuators.buzzer`
   - [x] RGB light bar control → `raspbot.actuators.led_bar`
   - [x] IR sensor input → `raspbot.sensors.ir`
@@ -52,7 +52,7 @@ I want to publish this package on PyPI so that it can be easily installed and us
   - [x] `src/raspbot/sensors/ultrasonic.py`
   - [x] `src/raspbot/sensors/line_tracker.py`
   - [x] `src/raspbot/sensors/ir.py`
-  - [ ] `src/raspbot/inputs/button.py` *(no button hardware on V2)*
+  - [ ] `src/raspbot/inputs/button.py` *(moved to `src/raspbot/sensors/button.py` -- implemented)*
   - [x] `src/raspbot/display/oled.py`
   - [x] `src/raspbot/actuators/buzzer.py`
   - [x] `src/raspbot/actuators/led_bar.py` *(RGB light bar)*
@@ -73,14 +73,15 @@ I want to publish this package on PyPI so that it can be easily installed and us
 
 ## 6. Testing and Quality Gates
 - [x] Add unit tests for pure logic (data conversion, formatting, API behavior)
-- [x] Add unit tests for each peripheral API (line tracker, button, buzzer, RGB, IR)
-- [ ] Add hardware-in-the-loop smoke tests for real Raspberry Pi hardware *(file created; not yet run on real hardware)*
+- [x] Add unit tests for each peripheral API (line tracker, button, buzzer, RGB, IR, OLED)
+- [x] Add hardware-in-the-loop smoke tests for real Raspberry Pi hardware *(all 18 passed on Pi)*
 - [x] Add hardware smoke tests per module (file `tests/test_real_hardware.py`):
   - [x] line tracker read stability
-  - [ ] button debounce behavior *(no button hardware)*
+  - [x] button read behavior → `test_button_reads_without_error`, `test_button_not_pressed_by_default`
   - [x] buzzer tone/on-off behavior
   - [x] RGB light bar color/channel mapping
   - [x] IR sensor trigger/read behavior
+  - [x] OLED display init, write, refresh, context manager
   - [ ] camera frame capture with OpenCV *(not yet implemented)*
 - [x] Add mocks/fakes for I2C bus to run CI without hardware → `tests/conftest.py` `mock_bus` fixture
 - [ ] Add camera test doubles to run CI when no camera device is present

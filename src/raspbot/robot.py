@@ -25,6 +25,7 @@ from raspbot.actuators.motors import Motors
 from raspbot.actuators.servo import ServoPair
 from raspbot.bus import I2CBus
 from raspbot.effects.light_effects import LightEffects
+from raspbot.sensors.button import Button
 from raspbot.sensors.ir import IRReceiver
 from raspbot.sensors.line_tracker import LineTracker
 from raspbot.sensors.ultrasonic import UltrasonicSensor
@@ -49,6 +50,8 @@ class Robot:
         Four-wheel drive motor controller.
     servos : ServoPair
         Pan/tilt servo pair.
+    button : Button
+        KEY1 tactile user button.
     buzzer : Buzzer
         Piezo buzzer.
     leds : LedBar
@@ -72,6 +75,7 @@ class Robot:
 
         self.motors = Motors(self._bus)
         self.servos = ServoPair(self._bus)
+        self.button = Button(self._bus)
         self.buzzer = Buzzer(self._bus)
         self.leds = LedBar(self._bus)
         self.ultrasonic = UltrasonicSensor(self._bus)

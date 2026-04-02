@@ -21,6 +21,7 @@ from raspbot.exceptions import (
     RaspbotError,
 )
 from raspbot.robot import Robot
+from raspbot.sensors.button import Button
 from raspbot.types import (
     LedColor,
     LightEffect,
@@ -31,6 +32,8 @@ from raspbot.types import (
 
 __all__ = [
     "Robot",
+    # Sensors
+    "Button",
     # Exceptions
     "RaspbotError",
     "I2CError",
