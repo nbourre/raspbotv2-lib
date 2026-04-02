@@ -62,7 +62,10 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--tb=short"
+addopts = "--tb=short -m 'not hardware'"
+markers = [
+    "hardware: requires a physical Raspbot V2 connected over I2C (run with -m hardware)",
+]
 
 [tool.coverage.run]
 source = ["src/raspbot"]
