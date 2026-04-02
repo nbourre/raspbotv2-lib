@@ -66,6 +66,10 @@ addopts = "--tb=short -m 'not hardware'"
 markers = [
     "hardware: requires a physical Raspbot V2 connected over I2C (run with -m hardware)",
 ]
+filterwarnings = [
+    # DeprecationWarning from luma.oled using Pillow's deprecated getdata() -- not our code
+    "ignore::DeprecationWarning:luma",
+]
 
 [tool.coverage.run]
 source = ["src/raspbot"]
