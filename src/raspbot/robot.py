@@ -24,6 +24,7 @@ from raspbot.actuators.led_bar import LedBar
 from raspbot.actuators.motors import Motors
 from raspbot.actuators.servo import ServoPair
 from raspbot.bus import I2CBus
+from raspbot.camera.opencv_camera import Camera
 from raspbot.effects.light_effects import LightEffects
 from raspbot.sensors.button import Button
 from raspbot.sensors.ir import IRReceiver
@@ -43,6 +44,11 @@ class Robot:
         I2C address of the Raspbot microcontroller (default ``0x2B``).
     i2c_bus:
         Linux I2C bus number (default ``1``).
+    camera_device:
+        Camera device index or path passed to :class:`~raspbot.camera.Camera`
+        (default ``0``).  The camera is created but **not** opened
+        automatically -- call ``bot.camera.open()`` when needed, or use it as
+        a context manager.
 
     Attributes
     ----------
@@ -64,12 +70,16 @@ class Robot:
         IR remote-control receiver.
     light_effects : LightEffects
         Animated LED effect engine.
+    camera : Camera
+        OpenCV VideoCapture wrapper (not opened until you call
+        ``bot.camera.open()``).
     """
 
     def __init__(
         self,
         i2c_address: int = RASPBOT_I2C_ADDRESS,
         i2c_bus: int = RASPBOT_I2C_BUS,
+        camera_device: int | str = 0,
     ) -> None:
         self._bus = I2CBus(address=i2c_address, bus=i2c_bus)
 
@@ -82,6 +92,7 @@ class Robot:
         self.line_tracker = LineTracker(self._bus)
         self.ir = IRReceiver(self._bus)
         self.light_effects = LightEffects(self.leds)
+        self.camera = Camera(device=camera_device)
 
         logger.debug("Robot initialised (bus=%d, addr=0x%02X)", i2c_bus, i2c_address)
 
@@ -97,6 +108,8 @@ class Robot:
             self.leds.off_all()
         with contextlib.suppress(Exception):
             self.buzzer.off()
+        with contextlib.suppress(Exception):
+            self.camera.close()
         self._bus.close()
         logger.debug("Robot closed")
 

@@ -16,6 +16,7 @@ from raspbot.actuators.buzzer import Buzzer
 from raspbot.actuators.led_bar import LedBar
 from raspbot.actuators.motors import Motors
 from raspbot.actuators.servo import Servo, ServoPair
+from raspbot.camera.opencv_camera import Camera
 from raspbot.display.oled import OLED_HEIGHT, OLED_WIDTH, OLEDDisplay
 from raspbot.exceptions import OLEDError
 from raspbot.sensors.button import Button
@@ -308,9 +309,7 @@ class TestOLEDDisplay:
             assert oled.begin() is True
 
     def test_begin_returns_false_on_exception(self) -> None:
-        with patch(
-            "raspbot.display.oled._import_oled_deps", side_effect=ImportError("no luma")
-        ):
+        with patch("raspbot.display.oled._import_oled_deps", side_effect=ImportError("no luma")):
             oled = OLEDDisplay()
             assert oled.begin() is False
 
@@ -422,16 +421,12 @@ class TestOLEDDisplay:
 
 
 class TestButton:
-    def test_is_pressed_returns_true_when_register_is_1(
-        self, mock_bus: MagicMock
-    ) -> None:
+    def test_is_pressed_returns_true_when_register_is_1(self, mock_bus: MagicMock) -> None:
         mock_bus.read_block_data.return_value = [1]
         btn = Button(mock_bus)
         assert btn.is_pressed() is True
 
-    def test_is_pressed_returns_false_when_register_is_0(
-        self, mock_bus: MagicMock
-    ) -> None:
+    def test_is_pressed_returns_false_when_register_is_0(self, mock_bus: MagicMock) -> None:
         mock_bus.read_block_data.return_value = [0]
         btn = Button(mock_bus)
         assert btn.is_pressed() is False
@@ -441,3 +436,184 @@ class TestButton:
         btn = Button(mock_bus)
         btn.is_pressed()
         mock_bus.read_block_data.assert_called_once_with(Reg.BUTTON, 1)
+
+
+# ---------------------------------------------------------------------------
+# Camera
+# ---------------------------------------------------------------------------
+
+
+def _fake_frame() -> MagicMock:
+    """Return a MagicMock that looks enough like a numpy ndarray for our tests."""
+    frame = MagicMock()
+    frame.shape = (480, 640, 3)
+    frame.ndim = 3
+    return frame
+
+
+def _make_mock_cap(
+    *,
+    is_open: bool = True,
+    read_ret: bool = True,
+    read_frame: Any = None,
+) -> MagicMock:
+    """Build a MagicMock that behaves like a cv2.VideoCapture object."""
+    if read_frame is None:
+        read_frame = _fake_frame()
+
+    cap = MagicMock()
+    cap.isOpened.return_value = is_open
+    cap.read.return_value = (read_ret, read_frame if read_ret else None)
+
+    # Make get() return sensible defaults for width / height / fps
+    # Prop constants match the mock_cv2 values set in _patch_cv2:
+    # CAP_PROP_FRAME_WIDTH=3, CAP_PROP_FRAME_HEIGHT=4, CAP_PROP_FPS=5
+    def _cap_get(prop: int) -> float:
+        return {3: 640.0, 4: 480.0, 5: 30.0}.get(prop, 0.0)
+
+    cap.get.side_effect = _cap_get
+    return cap
+
+
+def _patch_cv2(mock_cap: MagicMock) -> Any:
+    """Return a patcher that replaces _import_cv2 with a mock cv2 module."""
+    mock_cv2 = MagicMock()
+    mock_cv2.VideoCapture.return_value = mock_cap
+    mock_cv2.CAP_PROP_FRAME_WIDTH = 3
+    mock_cv2.CAP_PROP_FRAME_HEIGHT = 4
+    mock_cv2.CAP_PROP_FPS = 5
+    mock_cv2.COLOR_BGR2RGB = 4  # arbitrary constant
+    return patch("raspbot.camera.opencv_camera._import_cv2", return_value=mock_cv2)
+
+
+class TestCamera:
+    def test_open_returns_true_on_success(self) -> None:
+        mock_cap = _make_mock_cap()
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            assert cam.open() is True
+
+    def test_open_returns_false_when_cap_not_opened(self) -> None:
+        mock_cap = _make_mock_cap(is_open=False)
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            assert cam.open() is False
+
+    def test_open_returns_false_when_cv2_missing(self) -> None:
+        with patch(
+            "raspbot.camera.opencv_camera._import_cv2",
+            side_effect=ImportError("no cv2"),
+        ):
+            cam = Camera()
+            assert cam.open() is False
+
+    def test_is_open_false_before_open(self) -> None:
+        cam = Camera()
+        assert cam.is_open is False
+
+    def test_is_open_true_after_open(self) -> None:
+        mock_cap = _make_mock_cap()
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            cam.open()
+        assert cam.is_open is True
+
+    def test_close_releases_cap(self) -> None:
+        mock_cap = _make_mock_cap()
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            cam.open()
+            cam.close()
+        mock_cap.release.assert_called_once()
+        assert cam._cap is None
+
+    def test_close_is_safe_when_not_open(self) -> None:
+        cam = Camera()
+        cam.close()  # should not raise
+
+    def test_read_frame_returns_the_captured_object(self) -> None:
+        expected = _fake_frame()
+        mock_cap = _make_mock_cap(read_frame=expected)
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            cam.open()
+            frame = cam.read_frame()
+        # The wrapper must return exactly the object from cap.read()
+        assert frame is expected
+
+    def test_read_frame_shape_is_propagated(self) -> None:
+        expected = _fake_frame()
+        mock_cap = _make_mock_cap(read_frame=expected)
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            cam.open()
+            frame = cam.read_frame()
+        assert frame is not None
+        assert frame.shape == (480, 640, 3)
+
+    def test_read_frame_returns_none_when_cap_fails(self) -> None:
+        mock_cap = _make_mock_cap(read_ret=False)
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            cam.open()
+            frame = cam.read_frame()
+        assert frame is None
+
+    def test_read_frame_raises_when_not_open(self) -> None:
+        cam = Camera()
+        with pytest.raises(RuntimeError, match="not open"):
+            cam.read_frame()
+
+    def test_read_frame_rgb_calls_cvt_color(self) -> None:
+        expected = _fake_frame()
+        mock_cap = _make_mock_cap()
+        mock_cv2 = MagicMock()
+        mock_cv2.VideoCapture.return_value = mock_cap
+        mock_cv2.CAP_PROP_FRAME_WIDTH = 3
+        mock_cv2.CAP_PROP_FRAME_HEIGHT = 4
+        mock_cv2.CAP_PROP_FPS = 5
+        mock_cv2.COLOR_BGR2RGB = 4
+        mock_cv2.cvtColor.return_value = expected
+
+        with patch("raspbot.camera.opencv_camera._import_cv2", return_value=mock_cv2):
+            cam = Camera()
+            cam.open()
+            result = cam.read_frame_rgb()
+
+        mock_cv2.cvtColor.assert_called_once()
+        assert result is expected
+
+    def test_read_frame_rgb_returns_none_when_cap_fails(self) -> None:
+        mock_cap = _make_mock_cap(read_ret=False)
+        with _patch_cv2(mock_cap):
+            cam = Camera()
+            cam.open()
+            assert cam.read_frame_rgb() is None
+
+    def test_context_manager_opens_and_closes(self) -> None:
+        mock_cap = _make_mock_cap()
+        with _patch_cv2(mock_cap), Camera() as cam:
+            assert cam.is_open is True
+        mock_cap.release.assert_called_once()
+
+    def test_width_height_fps_properties(self) -> None:
+        mock_cap = _make_mock_cap()
+        with _patch_cv2(mock_cap):
+            cam = Camera(width=320, height=240, fps=15)
+            cam.open()
+            # get() side_effect returns 640/480/30 for the standard props
+            assert cam.width == 640
+            assert cam.height == 480
+            assert cam.fps == 30.0
+
+    def test_width_height_zero_when_not_open(self) -> None:
+        cam = Camera()
+        assert cam.width == 0
+        assert cam.height == 0
+        assert cam.fps == 0.0
+
+    def test_repr_shows_status(self) -> None:
+        cam = Camera(device=1)
+        r = repr(cam)
+        assert "device=1" in r
+        assert "closed" in r

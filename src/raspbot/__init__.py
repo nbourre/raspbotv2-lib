@@ -13,6 +13,7 @@ Quick start::
 
 from __future__ import annotations
 
+from raspbot.camera.opencv_camera import Camera
 from raspbot.exceptions import (
     DeviceNotFoundError,
     HardwareNotReadyError,
@@ -37,6 +38,8 @@ __all__ = [
     "Task",
     # Sensors
     "Button",
+    # Camera
+    "Camera",
     # Exceptions
     "RaspbotError",
     "I2CError",

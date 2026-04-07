@@ -23,11 +23,11 @@ I want to publish this package on PyPI so that it can be easily installed and us
   - [x] Buzzer control → `raspbot.actuators.buzzer`
   - [x] RGB light bar control → `raspbot.actuators.led_bar`
   - [x] IR sensor input → `raspbot.sensors.ir`
-  - [ ] Camera capture (OpenCV-compatible) *(not yet implemented)*
+  - [x] Camera capture (OpenCV-compatible) → `raspbot.camera.opencv_camera` (optional extra `[camera]`)
 - [x] Decide minimum Python version → **3.10+**
 - [x] Define Raspberry Pi OS/hardware targets → Pi with I2C bus 1, address 0x2B
 - [x] Decide whether OLED support is bundled or an optional extra → **optional extra `[oled]`**
-- [ ] Decide whether camera/OpenCV support is bundled or provided as an optional extra
+- [x] Decide whether camera/OpenCV support is bundled or provided as an optional extra → **optional extra `[camera]`**
 
 ## 2. Remove Dependency on Existing Raspbot Library
 - [x] Inventory every `Raspbot_Lib` call currently used in scripts
@@ -56,7 +56,7 @@ I want to publish this package on PyPI so that it can be easily installed and us
   - [x] `src/raspbot/display/oled.py`
   - [x] `src/raspbot/actuators/buzzer.py`
   - [x] `src/raspbot/actuators/led_bar.py` *(RGB light bar)*
-  - [ ] `src/raspbot/camera/opencv_camera.py` *(not yet implemented)*
+  - [x] `src/raspbot/camera/opencv_camera.py` → `Camera` class, lazy cv2 import, context manager
   - [x] `src/raspbot/exceptions.py`
   - [x] `src/raspbot/types.py`
 - [x] Keep side effects out of import time (no hardware auto-init on import)
@@ -68,7 +68,7 @@ I want to publish this package on PyPI so that it can be easily installed and us
   - [x] name, version, description, readme, license, classifiers
   - [x] project URLs (repo, docs, issues)
   - [x] authors/maintainers
-- [x] Define runtime dependencies and optional extras (`oled`, `dev`)
+- [x] Define runtime dependencies and optional extras (`oled`, `camera`, `dev`)
 - [x] Configure wheel + sdist builds
 
 ## 6. Testing and Quality Gates
@@ -82,9 +82,9 @@ I want to publish this package on PyPI so that it can be easily installed and us
   - [x] RGB light bar color/channel mapping
   - [x] IR sensor trigger/read behavior
   - [x] OLED display init, write, refresh, context manager
-  - [ ] camera frame capture with OpenCV *(not yet implemented)*
+  - [x] camera frame capture with OpenCV → `test_camera_*` tests in `test_real_hardware.py` (8 hardware tests added)
 - [x] Add mocks/fakes for I2C bus to run CI without hardware → `tests/conftest.py` `mock_bus` fixture
-- [ ] Add camera test doubles to run CI when no camera device is present
+- [x] Add camera test doubles to run CI when no camera device is present (mock cv2 + mock cap)
 - [ ] Add linting + formatting + type checks:
   - [x] ruff (configured in `pyproject.toml`, wired into CI)
   - [x] mypy (configured in `pyproject.toml`, wired into CI)
@@ -131,7 +131,7 @@ I want to publish this package on PyPI so that it can be easily installed and us
 - [x] Implement minimal independent class for ultrasonic sensor reads
 - [x] Implement minimal independent OLED class with `init`, `clear`, `add_line`, `refresh`
 - [x] Implement minimal independent classes for line tracker, buzzer, RGB light bar, and IR sensor
-- [ ] Implement OpenCV camera wrapper with safe open/release lifecycle
+- [x] Implement OpenCV camera wrapper with safe open/release lifecycle → `src/raspbot/camera/opencv_camera.py`
 - [ ] Replace usage in `03_test_oled.py` with your new package API
 - [x] Add first tests and package metadata
 - [ ] Do a TestPyPI dry run

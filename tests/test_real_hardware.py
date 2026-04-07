@@ -17,6 +17,7 @@ from collections.abc import Generator
 import pytest
 
 from raspbot import Robot
+from raspbot.camera.opencv_camera import Camera
 from raspbot.display.oled import OLEDDisplay
 from raspbot.types import LedColor, MotorId
 
@@ -222,3 +223,94 @@ def test_oled_context_manager() -> None:
         display.refresh()
         time.sleep(0.5)
     # After __exit__ the display should be cleared (no exception expected)
+
+
+# ---------------------------------------------------------------------------
+# Camera tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture()
+def cam() -> Generator[Camera, None, None]:
+    """Open a real Camera connection and close it after the test.
+
+    The test is skipped automatically if no camera is connected.
+    """
+    camera = Camera(device=0)
+    opened = camera.open()
+    if not opened:
+        pytest.skip("No camera found at device 0")
+    yield camera
+    camera.close()
+
+
+@pytest.mark.hardware
+def test_camera_opens_and_closes() -> None:
+    """Camera can be opened and closed without raising."""
+    camera = Camera(device=0)
+    opened = camera.open()
+    if not opened:
+        pytest.skip("No camera found at device 0")
+    assert camera.is_open is True
+    camera.close()
+    assert camera.is_open is False
+
+
+@pytest.mark.hardware
+def test_camera_read_frame_returns_ndarray(cam: Camera) -> None:
+    """read_frame() returns a BGR numpy array with the expected shape."""
+    import numpy as np
+
+    frame = cam.read_frame()
+    assert frame is not None
+    assert isinstance(frame, np.ndarray)
+    assert frame.ndim == 3
+    assert frame.shape[2] == 3  # BGR channels
+
+
+@pytest.mark.hardware
+def test_camera_read_frame_rgb(cam: Camera) -> None:
+    """read_frame_rgb() returns an RGB array of the same shape."""
+    import numpy as np
+
+    frame = cam.read_frame_rgb()
+    assert frame is not None
+    assert isinstance(frame, np.ndarray)
+    assert frame.ndim == 3
+    assert frame.shape[2] == 3
+
+
+@pytest.mark.hardware
+def test_camera_width_height_positive(cam: Camera) -> None:
+    """width and height properties return positive values after open()."""
+    assert cam.width > 0
+    assert cam.height > 0
+
+
+@pytest.mark.hardware
+def test_camera_fps_positive(cam: Camera) -> None:
+    """fps property returns a positive value after open()."""
+    assert cam.fps > 0.0
+
+
+@pytest.mark.hardware
+def test_camera_context_manager() -> None:
+    """Camera used as a context manager opens and releases cleanly."""
+    cam = Camera(device=0)
+    with cam:
+        if not cam.is_open:
+            pytest.skip("No camera found at device 0")
+        frame = cam.read_frame()
+        assert frame is not None
+    assert cam.is_open is False
+
+
+@pytest.mark.hardware
+def test_robot_camera_attribute(bot: Robot) -> None:
+    """Robot.camera is a Camera instance and can be opened."""
+    assert isinstance(bot.camera, Camera)
+    opened = bot.camera.open()
+    if not opened:
+        pytest.skip("No camera found at device 0")
+    frame = bot.camera.read_frame()
+    assert frame is not None

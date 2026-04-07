@@ -133,46 +133,46 @@ class TestTask:
     def test_does_not_run_before_rate_elapsed(self) -> None:
         calls: list[float] = []
         task = Task(lambda ct: calls.append(ct), rate=1.0)
-        task(0.0)   # fires (first call)
-        task(0.5)   # too soon
-        task(0.9)   # too soon
+        task(0.0)  # fires (first call)
+        task(0.5)  # too soon
+        task(0.9)  # too soon
         assert len(calls) == 1
 
     def test_runs_again_after_rate_elapsed(self) -> None:
         calls: list[float] = []
         task = Task(lambda ct: calls.append(ct), rate=1.0)
-        task(0.0)   # fires
-        task(1.0)   # exactly rate elapsed -- fires
+        task(0.0)  # fires
+        task(1.0)  # exactly rate elapsed -- fires
         assert len(calls) == 2
 
     def test_run_immediately_false_skips_first_call(self) -> None:
         calls: list[float] = []
         task = Task(lambda ct: calls.append(ct), rate=1.0, run_immediately=False)
-        task(0.0)   # should NOT fire -- waiting for first full period
+        task(0.0)  # should NOT fire -- waiting for first full period
         assert len(calls) == 0
 
     def test_run_immediately_false_fires_after_rate(self) -> None:
         calls: list[float] = []
         task = Task(lambda ct: calls.append(ct), rate=1.0, run_immediately=False)
-        task(0.0)   # skipped
+        task(0.0)  # skipped
         task(1.01)  # fires
         assert len(calls) == 1
 
     def test_reset_causes_immediate_next_fire(self) -> None:
         calls: list[float] = []
         task = Task(lambda ct: calls.append(ct), rate=10.0)
-        task(0.0)   # fires
-        task(1.0)   # too soon
+        task(0.0)  # fires
+        task(1.0)  # too soon
         task.reset()
-        task(1.0)   # fires again after reset
+        task(1.0)  # fires again after reset
         assert len(calls) == 2
 
     def test_rate_property_can_be_changed(self) -> None:
         calls: list[float] = []
         task = Task(lambda ct: calls.append(ct), rate=1.0)
-        task(0.0)   # fires
+        task(0.0)  # fires
         task.rate = 0.3
-        task(0.3)   # now fires at new rate
+        task(0.3)  # now fires at new rate
         assert len(calls) == 2
 
     def test_every_decorator(self) -> None:
@@ -182,9 +182,9 @@ class TestTask:
         def my_task(ct: float) -> None:
             calls.append(ct)
 
-        my_task(0.0)   # fires
-        my_task(0.5)   # too soon
-        my_task(1.0)   # fires
+        my_task(0.0)  # fires
+        my_task(0.5)  # too soon
+        my_task(1.0)  # fires
         assert len(calls) == 2
 
     def test_every_decorator_returns_task_instance(self) -> None:
