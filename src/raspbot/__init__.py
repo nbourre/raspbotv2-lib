@@ -29,9 +29,12 @@ from raspbot.types import (
     MotorId,
     ServoId,
 )
+from raspbot.utils.task import Task
 
 __all__ = [
     "Robot",
+    # Utilities
+    "Task",
     # Sensors
     "Button",
     # Exceptions

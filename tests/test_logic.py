@@ -1,10 +1,11 @@
-"""Tests for pure-logic modules: types, exceptions, and line_tracker parsing."""
+"""Tests for pure-logic modules: types, exceptions, line_tracker parsing, and Task."""
 
 from __future__ import annotations
 
 from raspbot.exceptions import DeviceNotFoundError, I2CError, OLEDError, RaspbotError
 from raspbot.sensors.line_tracker import LineState, _parse_line_byte
 from raspbot.types import LedColor, MotorDirection, MotorId, ServoId
+from raspbot.utils.task import Task
 
 # ---------------------------------------------------------------------------
 # Exception hierarchy
@@ -115,3 +116,88 @@ class TestParseLine:
     def test_raw_preserved(self) -> None:
         s = _parse_line_byte(0b0101)
         assert s.raw == 0b0101
+
+
+# ---------------------------------------------------------------------------
+# Task
+# ---------------------------------------------------------------------------
+
+
+class TestTask:
+    def test_runs_immediately_on_first_call_by_default(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=10.0)
+        task(0.0)
+        assert len(calls) == 1
+
+    def test_does_not_run_before_rate_elapsed(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=1.0)
+        task(0.0)   # fires (first call)
+        task(0.5)   # too soon
+        task(0.9)   # too soon
+        assert len(calls) == 1
+
+    def test_runs_again_after_rate_elapsed(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=1.0)
+        task(0.0)   # fires
+        task(1.0)   # exactly rate elapsed -- fires
+        assert len(calls) == 2
+
+    def test_run_immediately_false_skips_first_call(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=1.0, run_immediately=False)
+        task(0.0)   # should NOT fire -- waiting for first full period
+        assert len(calls) == 0
+
+    def test_run_immediately_false_fires_after_rate(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=1.0, run_immediately=False)
+        task(0.0)   # skipped
+        task(1.01)  # fires
+        assert len(calls) == 1
+
+    def test_reset_causes_immediate_next_fire(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=10.0)
+        task(0.0)   # fires
+        task(1.0)   # too soon
+        task.reset()
+        task(1.0)   # fires again after reset
+        assert len(calls) == 2
+
+    def test_rate_property_can_be_changed(self) -> None:
+        calls: list[float] = []
+        task = Task(lambda ct: calls.append(ct), rate=1.0)
+        task(0.0)   # fires
+        task.rate = 0.3
+        task(0.3)   # now fires at new rate
+        assert len(calls) == 2
+
+    def test_every_decorator(self) -> None:
+        calls: list[float] = []
+
+        @Task.every(1.0)
+        def my_task(ct: float) -> None:
+            calls.append(ct)
+
+        my_task(0.0)   # fires
+        my_task(0.5)   # too soon
+        my_task(1.0)   # fires
+        assert len(calls) == 2
+
+    def test_every_decorator_returns_task_instance(self) -> None:
+        @Task.every(0.5)
+        def my_task(ct: float) -> None:
+            pass
+
+        assert isinstance(my_task, Task)
+
+    def test_repr_contains_fn_name_and_rate(self) -> None:
+        def my_fn(ct: float) -> None:
+            pass
+
+        task = Task(my_fn, rate=2.5)
+        assert "my_fn" in repr(task)
+        assert "2.5" in repr(task)
