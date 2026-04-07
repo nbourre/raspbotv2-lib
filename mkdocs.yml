@@ -1,0 +1,65 @@
+site_name: raspbot
+site_description: Clean Python library for controlling the Yahboom Raspbot V2 robot car
+site_url: https://your-org.github.io/raspbot
+repo_url: https://github.com/your-org/raspbot
+repo_name: your-org/raspbot
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - search.suggest
+    - search.highlight
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.top
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+
+plugins:
+  - search
+  - privacy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.snippets
+  - pymdownx.highlight:
+      linenums: true
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - API Reference:
+    - Robot: api/robot.md
+    - Motors: api/motors.md
+    - Servos: api/servos.md
+    - Buzzer: api/buzzer.md
+    - LEDs: api/leds.md
+    - LED Effects: api/led_effects.md
+    - Ultrasonic Sensor: api/ultrasonic.md
+    - Line Tracker: api/line_tracker.md
+    - IR Receiver: api/ir_receiver.md
+    - Button: api/button.md
+    - OLED Display: api/oled.md
+    - Camera: api/camera.md
+    - Task: api/task.md
+    - Exceptions: api/exceptions.md
+  - Guides:
+    - Cooperative Tasks: guides/cooperative_tasks.md
+    - Line Following: guides/line_following.md
+    - Migration Guide: guides/migration.md
+    - Troubleshooting: guides/troubleshooting.md

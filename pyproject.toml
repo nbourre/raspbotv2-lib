@@ -45,6 +45,9 @@ dev = [
     "mypy>=1.8",
     "numpy>=1.24",
 ]
+docs = [
+    "mkdocs-material>=9.5",
+]
 
 [project.urls]
 Repository = "https://github.com/your-org/raspbot"
