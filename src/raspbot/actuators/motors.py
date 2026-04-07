@@ -7,6 +7,25 @@ Motor layout (viewed from above)::
 
     L1 (front-left)  R1 (front-right)
     L2 (rear-left)   R2 (rear-right)
+
+Mecanum wheel roller orientation (standard X-pattern)::
+
+    L1: rollers at +45 deg  (/)    R1: rollers at -45 deg  (\\)
+    L2: rollers at -45 deg  (\\)   R2: rollers at +45 deg  (/)
+
+This produces the following motion for each motor combination:
+
+    Movement           L1     L2     R1     R2
+    forward            FWD    FWD    FWD    FWD
+    backward           REV    REV    REV    REV
+    rotate_left        REV    REV    FWD    FWD
+    rotate_right       FWD    FWD    REV    REV
+    strafe_right       FWD    REV    REV    FWD
+    strafe_left        REV    FWD    FWD    REV
+    diagonal_fwd_right FWD    stop   stop   FWD
+    diagonal_fwd_left  stop   FWD    FWD    stop
+    diagonal_bwd_right REV    stop   stop   REV
+    diagonal_bwd_left  stop   REV    REV    stop
 """
 
 from __future__ import annotations
@@ -103,6 +122,113 @@ class Motors:
         self.set(MotorId.L2, MotorDirection.FORWARD, speed)
         self.set(MotorId.R1, MotorDirection.REVERSE, speed)
         self.set(MotorId.R2, MotorDirection.REVERSE, speed)
+
+    # ------------------------------------------------------------------
+    # Mecanum-specific moves (require X-pattern roller orientation)
+    # ------------------------------------------------------------------
+
+    def strafe_right(self, speed: int = 150) -> None:
+        """Slide directly right without rotating (mecanum only).
+
+        Motor pattern::
+
+            L1: forward    R1: reverse
+            L2: reverse    R2: forward
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.FORWARD, speed)
+        self.set(MotorId.L2, MotorDirection.REVERSE, speed)
+        self.set(MotorId.R1, MotorDirection.REVERSE, speed)
+        self.set(MotorId.R2, MotorDirection.FORWARD, speed)
+
+    def strafe_left(self, speed: int = 150) -> None:
+        """Slide directly left without rotating (mecanum only).
+
+        Motor pattern::
+
+            L1: reverse    R1: forward
+            L2: forward    R2: reverse
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.REVERSE, speed)
+        self.set(MotorId.L2, MotorDirection.FORWARD, speed)
+        self.set(MotorId.R1, MotorDirection.FORWARD, speed)
+        self.set(MotorId.R2, MotorDirection.REVERSE, speed)
+
+    def diagonal_forward_right(self, speed: int = 150) -> None:
+        """Drive diagonally forward-right at 45 degrees (mecanum only).
+
+        Only L1 (front-left) and R2 (rear-right) are driven; the other
+        two motors are stopped.
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255 for the active motors.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.FORWARD, speed)
+        self.set(MotorId.L2, MotorDirection.FORWARD, 0)
+        self.set(MotorId.R1, MotorDirection.FORWARD, 0)
+        self.set(MotorId.R2, MotorDirection.FORWARD, speed)
+
+    def diagonal_forward_left(self, speed: int = 150) -> None:
+        """Drive diagonally forward-left at 45 degrees (mecanum only).
+
+        Only L2 (rear-left) and R1 (front-right) are driven.
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255 for the active motors.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.FORWARD, 0)
+        self.set(MotorId.L2, MotorDirection.FORWARD, speed)
+        self.set(MotorId.R1, MotorDirection.FORWARD, speed)
+        self.set(MotorId.R2, MotorDirection.FORWARD, 0)
+
+    def diagonal_backward_right(self, speed: int = 150) -> None:
+        """Drive diagonally backward-right at 45 degrees (mecanum only).
+
+        Only L1 (front-left) and R2 (rear-right) are driven in reverse.
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255 for the active motors.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.REVERSE, speed)
+        self.set(MotorId.L2, MotorDirection.FORWARD, 0)
+        self.set(MotorId.R1, MotorDirection.FORWARD, 0)
+        self.set(MotorId.R2, MotorDirection.REVERSE, speed)
+
+    def diagonal_backward_left(self, speed: int = 150) -> None:
+        """Drive diagonally backward-left at 45 degrees (mecanum only).
+
+        Only L2 (rear-left) and R1 (front-right) are driven in reverse.
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255 for the active motors.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.FORWARD, 0)
+        self.set(MotorId.L2, MotorDirection.REVERSE, speed)
+        self.set(MotorId.R1, MotorDirection.REVERSE, speed)
+        self.set(MotorId.R2, MotorDirection.FORWARD, 0)
 
     def stop(self) -> None:
         """Stop all motors immediately."""

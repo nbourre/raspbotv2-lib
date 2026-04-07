@@ -46,6 +46,7 @@ nav:
   - API Reference:
     - Robot: api/robot.md
     - Motors: api/motors.md
+    - Mecanum Wheels: api/mecanum.md
     - Servos: api/servos.md
     - Buzzer: api/buzzer.md
     - LEDs: api/leds.md

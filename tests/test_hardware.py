@@ -65,6 +65,85 @@ class TestMotors:
             assert data[1] == MotorDirection.FORWARD
             assert data[2] == 100
 
+    # Mecanum moves
+
+    def test_strafe_right_motor_pattern(self, mock_bus: MagicMock) -> None:
+        # L1:FWD  L2:REV  R1:REV  R2:FWD
+        m = Motors(mock_bus)
+        m.strafe_right(120)
+        calls = mock_bus.write_block_data.call_args_list
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.FORWARD, 120]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.REVERSE, 120]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.REVERSE, 120]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.FORWARD, 120]) in calls
+
+    def test_strafe_left_motor_pattern(self, mock_bus: MagicMock) -> None:
+        # L1:REV  L2:FWD  R1:FWD  R2:REV
+        m = Motors(mock_bus)
+        m.strafe_left(120)
+        calls = mock_bus.write_block_data.call_args_list
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.REVERSE, 120]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.FORWARD, 120]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.FORWARD, 120]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.REVERSE, 120]) in calls
+
+    def test_diagonal_forward_right_pattern(self, mock_bus: MagicMock) -> None:
+        # L1:FWD  L2:stop  R1:stop  R2:FWD
+        m = Motors(mock_bus)
+        m.diagonal_forward_right(130)
+        calls = mock_bus.write_block_data.call_args_list
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.FORWARD, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.FORWARD, 130]) in calls
+
+    def test_diagonal_forward_left_pattern(self, mock_bus: MagicMock) -> None:
+        # L1:stop  L2:FWD  R1:FWD  R2:stop
+        m = Motors(mock_bus)
+        m.diagonal_forward_left(130)
+        calls = mock_bus.write_block_data.call_args_list
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.FORWARD, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.FORWARD, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.FORWARD, 0]) in calls
+
+    def test_diagonal_backward_right_pattern(self, mock_bus: MagicMock) -> None:
+        # L1:REV  L2:stop  R1:stop  R2:REV
+        m = Motors(mock_bus)
+        m.diagonal_backward_right(130)
+        calls = mock_bus.write_block_data.call_args_list
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.REVERSE, 130]) in calls
+
+    def test_diagonal_backward_left_pattern(self, mock_bus: MagicMock) -> None:
+        # L1:stop  L2:REV  R1:REV  R2:stop
+        m = Motors(mock_bus)
+        m.diagonal_backward_left(130)
+        calls = mock_bus.write_block_data.call_args_list
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.FORWARD, 0]) in calls
+
+    def test_strafe_clamps_speed_above_255(self, mock_bus: MagicMock) -> None:
+        m = Motors(mock_bus)
+        m.strafe_right(300)
+        for c in mock_bus.write_block_data.call_args_list:
+            _, data = c[0]
+            assert data[2] <= 255
+
+    def test_strafe_sends_four_commands(self, mock_bus: MagicMock) -> None:
+        m = Motors(mock_bus)
+        m.strafe_left(100)
+        assert mock_bus.write_block_data.call_count == 4
+
+    def test_diagonal_sends_four_commands(self, mock_bus: MagicMock) -> None:
+        m = Motors(mock_bus)
+        m.diagonal_forward_right(100)
+        assert mock_bus.write_block_data.call_count == 4
+
 
 # ---------------------------------------------------------------------------
 # Servo

@@ -152,5 +152,6 @@ with Robot() as bot:
 
 ## See also
 
+- [Mecanum Wheels](mecanum.md)
 - [Robot facade](robot.md)
 - [Cooperative Tasks guide](../guides/cooperative_tasks.md)
