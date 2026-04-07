@@ -18,6 +18,7 @@ from raspbot.actuators.motors import Motors
 from raspbot.actuators.servo import Servo, ServoPair
 from raspbot.camera.opencv_camera import Camera
 from raspbot.display.oled import OLED_HEIGHT, OLED_WIDTH, OLEDDisplay
+from raspbot.effects.light_effects import LightEffects
 from raspbot.exceptions import OLEDError
 from raspbot.sensors.button import Button
 from raspbot.sensors.ir import IRReceiver
@@ -195,20 +196,192 @@ class TestBuzzer:
         b.off()
         mock_bus.write_block_data.assert_called_once_with(Reg.BEEP, [0])
 
-    def test_beep_calls_on_then_off(self, mock_bus: MagicMock) -> None:
+    def test_idle_is_not_active(self, mock_bus: MagicMock) -> None:
         b = Buzzer(mock_bus)
-        with patch("raspbot.actuators.buzzer.time.sleep"):
-            b.beep(0.1)
-        calls = mock_bus.write_block_data.call_args_list
-        assert calls[0] == call(Reg.BEEP, [1])
-        assert calls[1] == call(Reg.BEEP, [0])
+        assert not b.is_active
 
-    def test_pattern_repeats(self, mock_bus: MagicMock) -> None:
+    def test_beep_turns_on_immediately(self, mock_bus: MagicMock) -> None:
         b = Buzzer(mock_bus)
-        with patch("raspbot.actuators.buzzer.time.sleep"):
-            b.pattern(0.1, 0.1, 3)
-        # 3 beeps x 2 calls (on + off) = 6
-        assert mock_bus.write_block_data.call_count == 6
+        b.beep(0.2)
+        mock_bus.write_block_data.assert_called_with(Reg.BEEP, [1])
+        assert b.is_active
+
+    def test_beep_turns_off_after_duration(self, mock_bus: MagicMock) -> None:
+        b = Buzzer(mock_bus)
+        b.beep(0.2)
+        # First update() stamps the deadline
+        b.update(0.0)
+        # Before deadline -- still on
+        b.update(0.1)
+        assert b._buzzer_on
+        # After deadline -- should turn off
+        b.update(0.3)
+        calls = mock_bus.write_block_data.call_args_list
+        # on() during beep(), off() after deadline
+        assert calls[-1] == call(Reg.BEEP, [0])
+        assert not b.is_active
+
+    def test_beep_inactive_after_done(self, mock_bus: MagicMock) -> None:
+        b = Buzzer(mock_bus)
+        b.beep(0.1)
+        b.update(0.0)
+        b.update(1.0)  # well past deadline
+        assert not b.is_active
+
+    def test_pattern_emits_correct_on_off_count(self, mock_bus: MagicMock) -> None:
+        # 3-beep pattern with on_time=0.1, off_time=0.1
+        b = Buzzer(mock_bus)
+        b.pattern(0.1, 0.1, 3)
+        # Simulate the full sequence by advancing time through all phases
+        # t=0: beep() called, buzzer on (call 1)
+        # update at t=0: stamps deadline at 0.1
+        b.update(0.0)
+        # t=0.15: first ON expires -> off (call 2), schedule OFF gap end at 0.25
+        b.update(0.15)
+        # t=0.30: OFF gap expires -> on (call 3), schedule ON end at 0.40
+        b.update(0.30)
+        # t=0.45: second ON expires -> off (call 4), schedule OFF gap end at 0.55
+        b.update(0.45)
+        # t=0.60: OFF gap expires -> on (call 5), schedule ON end at 0.70
+        b.update(0.60)
+        # t=0.75: third ON expires -> off (call 6), done
+        b.update(0.75)
+
+        on_calls  = [c for c in mock_bus.write_block_data.call_args_list if c == call(Reg.BEEP, [1])]
+        off_calls = [c for c in mock_bus.write_block_data.call_args_list if c == call(Reg.BEEP, [0])]
+        assert len(on_calls)  == 3
+        assert len(off_calls) == 3
+        assert not b.is_active
+
+    def test_pattern_zero_count_does_nothing(self, mock_bus: MagicMock) -> None:
+        b = Buzzer(mock_bus)
+        b.pattern(0.1, 0.1, 0)
+        assert not b.is_active
+        mock_bus.write_block_data.assert_not_called()
+
+    def test_beep_zero_duration_does_nothing(self, mock_bus: MagicMock) -> None:
+        b = Buzzer(mock_bus)
+        b.beep(0)
+        assert not b.is_active
+        mock_bus.write_block_data.assert_not_called()
+
+    def test_update_when_idle_does_nothing(self, mock_bus: MagicMock) -> None:
+        b = Buzzer(mock_bus)
+        b.update(1.0)
+        mock_bus.write_block_data.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# LightEffects
+# ---------------------------------------------------------------------------
+
+
+class TestLightEffects:
+    """Tests for the non-blocking LightEffects state machine."""
+
+    def _make(self, mock_bus: MagicMock) -> tuple[LightEffects, LedBar]:
+        bar = LedBar(mock_bus)
+        fx = LightEffects(bar)
+        return fx, bar
+
+    def test_idle_is_not_active(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        assert not fx.is_active
+
+    def test_stop_before_start_does_not_raise(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.stop()  # must not raise
+
+    def test_update_when_idle_does_nothing(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.update(0.0)
+        mock_bus.write_block_data.assert_not_called()
+
+    def test_start_river_marks_active(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_river(speed=0.05)
+        assert fx.is_active
+
+    def test_river_update_calls_set_one(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_river(speed=0.05)
+        fx.update(0.0)   # first frame
+        # set_one should have been called (3 LEDs in the group)
+        assert mock_bus.write_block_data.call_count >= 1
+
+    def test_river_update_rate_gates(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_river(speed=0.1)
+        fx.update(0.0)  # frame 1
+        count_after_first = mock_bus.write_block_data.call_count
+        fx.update(0.05)  # too soon -- should be gated out
+        assert mock_bus.write_block_data.call_count == count_after_first
+
+    def test_stop_turns_off_leds(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_river()
+        fx.stop()
+        assert not fx.is_active
+        # off_all() must have been called
+        mock_bus.write_block_data.assert_called()
+
+    def test_start_breathing_marks_active(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_breathing(LedColor.RED, speed=0.01)
+        assert fx.is_active
+
+    def test_breathing_update_calls_set_brightness_all(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_breathing(LedColor.BLUE, speed=0.01)
+        fx.update(0.0)
+        mock_bus.write_block_data.assert_called()
+
+    def test_start_random_running_marks_active(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_random_running(speed=0.05)
+        assert fx.is_active
+
+    def test_random_running_update_sets_all_leds(self, mock_bus: MagicMock) -> None:
+        from raspbot.types import NUM_LEDS
+        fx, _ = self._make(mock_bus)
+        fx.start_random_running(speed=0.05)
+        fx.update(0.0)
+        # set_one is called once per LED
+        assert mock_bus.write_block_data.call_count == NUM_LEDS
+
+    def test_start_starlight_marks_active(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_starlight(speed=0.1)
+        assert fx.is_active
+
+    def test_starlight_update_writes_leds(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_starlight(speed=0.1)
+        fx.update(0.0)
+        mock_bus.write_block_data.assert_called()
+
+    def test_start_gradient_marks_active(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_gradient(speed=0.02)
+        assert fx.is_active
+
+    def test_gradient_update_writes_leds(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_gradient(speed=0.02)
+        fx.update(0.0)
+        mock_bus.write_block_data.assert_called()
+
+    def test_off_alias_for_stop(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_river()
+        fx.off()
+        assert not fx.is_active
+
+    def test_restart_replaces_current_effect(self, mock_bus: MagicMock) -> None:
+        fx, _ = self._make(mock_bus)
+        fx.start_river()
+        fx.start_breathing()  # should replace without errors
+        assert fx.is_active
 
 
 # ---------------------------------------------------------------------------

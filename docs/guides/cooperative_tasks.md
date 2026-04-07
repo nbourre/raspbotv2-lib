@@ -182,7 +182,85 @@ For typical robot control rates (10-50 Hz) the accuracy is more than sufficient.
 
 ---
 
+## Buzzer and LightEffects in the tick loop
+
+Both `Buzzer` and `LightEffects` follow the same cooperative pattern.
+They have their own internal state machines driven by `update(ct)` --
+you never call `time.sleep()` inside them.
+
+### Buzzer
+
+Schedule work with `beep()` or `pattern()`; advance state with `update()`:
+
+```python
+import time
+from raspbot import Robot
+
+with Robot() as bot:
+    # Schedule 3 short beeps -- returns immediately
+    bot.buzzer.pattern(on_time=0.1, off_time=0.1, count=3)
+
+    while bot.buzzer.is_active:
+        bot.buzzer.update(time.monotonic())
+        time.sleep(0.001)
+```
+
+### LightEffects
+
+Start an effect with `start_*()`, advance it with `update()`, stop with `stop()`:
+
+```python
+import time
+from raspbot import Robot
+from raspbot.types import LedColor
+
+with Robot() as bot:
+    bot.light_effects.start_breathing(LedColor.CYAN, speed=0.01)
+
+    end = time.monotonic() + 10.0
+    while time.monotonic() < end:
+        bot.light_effects.update(time.monotonic())
+        time.sleep(0.001)
+
+    bot.light_effects.stop()
+```
+
+### Combined loop
+
+Drive multiple state machines from the same `ct`:
+
+```python
+import time
+from raspbot import Robot
+from raspbot.types import LedColor
+from raspbot.utils.task import Task
+
+with Robot() as bot:
+    bot.light_effects.start_river(speed=0.05)
+
+    # Alert beep every 5 seconds
+    def alert(ct: float) -> None:
+        bot.buzzer.pattern(0.05, 0.05, 2)
+
+    task_alert = Task(alert, rate=5.0)
+
+    end = time.monotonic() + 30.0
+    while time.monotonic() < end:
+        ct = time.monotonic()
+        bot.buzzer.update(ct)
+        bot.light_effects.update(ct)
+        task_alert(ct)
+        time.sleep(0.001)
+
+    bot.light_effects.stop()
+    bot.buzzer.off()
+```
+
+---
+
 ## See also
 
 - [Task API reference](../api/task.md)
+- [Buzzer API reference](../api/buzzer.md)
+- [LED Effects API reference](../api/led_effects.md)
 - [Complete robot example](../api/robot.md)

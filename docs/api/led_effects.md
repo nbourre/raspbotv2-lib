@@ -3,37 +3,38 @@
 `raspbot.effects.light_effects.LightEffects`
 
 Animated LED effect engine built on top of `LedBar`.
-All effects run synchronously in the calling thread and respect a `running` flag that can be
-cleared to stop the effect early.
 
 Access via `Robot.light_effects`.
 
+All effects are **non-blocking**.  Start an effect with one of the
+`start_*` methods, then call `update(ct)` on every main-loop iteration to
+advance the animation.  No `time.sleep()` or background threads are used.
+
 ---
 
-## Methods
+## Starting effects
 
-### `river(duration=10.0, speed=0.05)`
+### `start_river(speed=0.05)`
 
 ```python
-def river(self, duration: float = 10.0, speed: float = 0.05) -> None
+def start_river(self, speed: float = 0.05) -> None
 ```
 
 Sequential chase-light cycling through all 7 colours.
+A sliding 3-LED window advances one step per frame.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `duration` | `float` | `10.0` | Total run time (seconds) |
-| `speed` | `float` | `0.05` | Delay between each LED step (seconds) |
+| `speed` | `float` | `0.05` | Seconds between each LED step |
 
 ---
 
-### `breathing(color=LedColor.BLUE, duration=10.0, speed=0.01)`
+### `start_breathing(color=LedColor.BLUE, speed=0.01)`
 
 ```python
-def breathing(
+def start_breathing(
     self,
     color: LedColor = LedColor.BLUE,
-    duration: float = 10.0,
     speed: float = 0.01,
 ) -> None
 ```
@@ -43,38 +44,70 @@ Fade all LEDs in and out on a single colour.
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `color` | `LedColor` | `BLUE` | Which colour to breathe |
-| `duration` | `float` | `10.0` | Total run time (seconds) |
-| `speed` | `float` | `0.01` | Delay between brightness steps (seconds) |
+| `speed` | `float` | `0.01` | Seconds between brightness steps |
 
 ---
 
-### `random_running(duration=10.0, speed=0.05)`
+### `start_random_running(speed=0.05)`
 
 ```python
-def random_running(self, duration: float = 10.0, speed: float = 0.05) -> None
+def start_random_running(self, speed: float = 0.05) -> None
 ```
 
-Randomly colour each LED every tick.
+Assign a random `LedColor` to every LED each frame.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `speed` | `float` | `0.05` | Seconds between frames |
 
 ---
 
-### `starlight(duration=10.0, speed=0.1)`
+### `start_starlight(speed=0.1)`
 
 ```python
-def starlight(self, duration: float = 10.0, speed: float = 0.1) -> None
+def start_starlight(self, speed: float = 0.1) -> None
 ```
 
-Random subset of LEDs lit, cycling through all colours.
+Randomly light a subset of LEDs each frame.  The active colour cycles
+through all 7 colours, spending about one second on each.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `speed` | `float` | `0.1` | Seconds between frames |
 
 ---
 
-### `gradient(duration=10.0, speed=0.02)`
+### `start_gradient(speed=0.02)`
 
 ```python
-def gradient(self, duration: float = 10.0, speed: float = 0.02) -> None
+def start_gradient(self, speed: float = 0.02) -> None
 ```
 
-Sequential fill with a random RGB colour, then reverse-fill (wipe in/out).
+Fill LEDs one by one with a random saturated colour, then erase them one
+by one, repeating indefinitely.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `speed` | `float` | `0.02` | Seconds between each LED step |
+
+---
+
+## Tick and control
+
+### `update(ct)`
+
+```python
+def update(self, ct: float) -> None
+```
+
+Advance the current effect by one frame if enough time has elapsed.
+
+Call this on **every main-loop iteration** with `ct = time.monotonic()`.
+It is cheap (a float comparison) when gated between frames.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `ct` | `float` | Current time in seconds (from `time.monotonic()`) |
 
 ---
 
@@ -84,8 +117,7 @@ Sequential fill with a random RGB colour, then reverse-fill (wipe in/out).
 def stop(self) -> None
 ```
 
-Request the currently running effect to stop after its next cycle.
-Thread-safe; can be called from another thread.
+Cancel the current effect and turn off all LEDs immediately.
 
 ---
 
@@ -95,51 +127,56 @@ Thread-safe; can be called from another thread.
 def off(self) -> None
 ```
 
-Turn off all LEDs immediately (calls `LedBar.off_all()`).
+Alias for `stop()`.
 
 ---
 
-## Running effects in a background thread
-
-All effect methods are blocking.
-To run an effect without stalling your main loop, run it in a `threading.Thread`:
+### `is_active`
 
 ```python
-import threading
-from raspbot import Robot
-from raspbot.types import LedColor
-
-with Robot() as bot:
-    t = threading.Thread(
-        target=bot.light_effects.breathing,
-        kwargs={"color": LedColor.CYAN, "duration": 30.0},
-        daemon=True,
-    )
-    t.start()
-
-    # ... main loop continues here ...
-
-    bot.light_effects.stop()  # signal the effect to stop
-    t.join()
+@property
+def is_active(self) -> bool
 ```
+
+`True` while an effect is running.
 
 ---
 
 ## Examples
 
 ```python
+import time
 from raspbot import Robot
 from raspbot.types import LedColor
 
 with Robot() as bot:
-    # River chase for 5 seconds
-    bot.light_effects.river(duration=5.0)
+    # Start breathing blue -- returns immediately
+    bot.light_effects.start_breathing(LedColor.BLUE, speed=0.01)
 
-    # Breathing blue for 8 seconds
-    bot.light_effects.breathing(color=LedColor.BLUE, duration=8.0)
+    while True:
+        ct = time.monotonic()
+        bot.light_effects.update(ct)   # advances one frame when due
+        time.sleep(0.001)
+```
 
-    # Random party mode
-    bot.light_effects.random_running(duration=3.0)
+```python
+import time
+from raspbot import Robot
+
+with Robot() as bot:
+    # Cycle through effects
+    bot.light_effects.start_river(speed=0.05)
+    start = time.monotonic()
+
+    while True:
+        ct = time.monotonic()
+        bot.light_effects.update(ct)
+
+        if ct - start > 10.0:
+            bot.light_effects.start_starlight(speed=0.1)
+            start = ct
+
+        time.sleep(0.001)
 ```
 
 ---
@@ -148,3 +185,4 @@ with Robot() as bot:
 
 - [LEDs](leds.md)
 - [Robot facade](robot.md)
+- [Cooperative Tasks guide](../guides/cooperative_tasks.md)

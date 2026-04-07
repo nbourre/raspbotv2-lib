@@ -1,16 +1,18 @@
 """
-05_led_effects.py - Animated LED effects
+05_led_effects.py - Animated LED effects (non-blocking tick pattern)
 
-Demonstrates LightEffects methods (all run synchronously):
-  - river()          sequential chase light
-  - breathing()      smooth fade in/out on a single colour
-  - random_running() random colours on every LED each tick
-  - starlight()      random subsets of LEDs lit per colour
-  - gradient()       sequential fill with random RGB, then reverse-fill
-  - stop()           thread-safe stop request (useful when running in a thread)
-  - off()            immediately blank all LEDs
+Demonstrates LightEffects methods:
+  - start_river()          sequential chase light
+  - start_breathing()      smooth fade in/out on a single colour
+  - start_random_running() random colours on every LED each tick
+  - start_starlight()      random subsets of LEDs lit per colour
+  - start_gradient()       sequential fill with random RGB, then reverse-fill
+  - update(ct)             advance the animation (call every loop iteration)
+  - stop() / off()         cancel the current effect and turn off all LEDs
+  - is_active              True while an effect is running
 
-All effects accept duration (seconds) and speed (seconds per tick).
+All start_* methods return immediately.  The main loop calls update(ct)
+to drive animation frames without ever sleeping inside the library.
 
 Run on Raspberry Pi with the Raspbot V2 powered on.
 """
@@ -18,7 +20,21 @@ Run on Raspberry Pi with the Raspbot V2 powered on.
 import time
 
 from raspbot import Robot
-from raspbot.types import LedColor, LightEffect
+from raspbot.types import LedColor
+
+EFFECT_DURATION = 3.0   # seconds to run each effect
+LOOP_SLEEP = 0.001      # 1 ms loop tick
+
+
+def run_effect_for(bot: "Robot", seconds: float) -> None:  # type: ignore[name-defined]
+    """Drive update() for *seconds* then stop."""
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        bot.light_effects.update(time.monotonic())
+        time.sleep(LOOP_SLEEP)
+    bot.light_effects.stop()
+    time.sleep(0.3)
+
 
 with Robot() as bot:
     effects = bot.light_effects
@@ -27,44 +43,41 @@ with Robot() as bot:
     # river -- chasing coloured pixels across the bar
     # ------------------------------------------------------------------
 
-    print(f"Effect: {LightEffect.RIVER} (3 s) ...")
-    effects.river(duration=3.0, speed=0.05)
-
-    time.sleep(0.3)
+    print("Effect: river (3 s) ...")
+    effects.start_river(speed=0.05)
+    run_effect_for(bot, EFFECT_DURATION)
 
     # ------------------------------------------------------------------
     # breathing -- smooth fade on a single colour
     # ------------------------------------------------------------------
 
-    print(f"Effect: {LightEffect.BREATHING} (3 s, blue) ...")
-    effects.breathing(color=LedColor.BLUE, duration=3.0, speed=0.01)
-
-    time.sleep(0.3)
+    print("Effect: breathing blue (3 s) ...")
+    effects.start_breathing(color=LedColor.BLUE, speed=0.01)
+    run_effect_for(bot, EFFECT_DURATION)
 
     # ------------------------------------------------------------------
     # random_running -- random colours on all LEDs every tick
     # ------------------------------------------------------------------
 
-    print(f"Effect: {LightEffect.RANDOM} (3 s) ...")
-    effects.random_running(duration=3.0, speed=0.05)
-
-    time.sleep(0.3)
+    print("Effect: random_running (3 s) ...")
+    effects.start_random_running(speed=0.05)
+    run_effect_for(bot, EFFECT_DURATION)
 
     # ------------------------------------------------------------------
     # starlight -- random lit subset, cycling colours
     # ------------------------------------------------------------------
 
-    print(f"Effect: {LightEffect.STARLIGHT} (3 s) ...")
-    effects.starlight(duration=3.0, speed=0.1)
-
-    time.sleep(0.3)
+    print("Effect: starlight (3 s) ...")
+    effects.start_starlight(speed=0.1)
+    run_effect_for(bot, EFFECT_DURATION)
 
     # ------------------------------------------------------------------
     # gradient -- sequential fill then reverse with random RGB colour
     # ------------------------------------------------------------------
 
-    print(f"Effect: {LightEffect.GRADIENT} (3 s) ...")
-    effects.gradient(duration=3.0, speed=0.04)
+    print("Effect: gradient (3 s) ...")
+    effects.start_gradient(speed=0.04)
+    run_effect_for(bot, EFFECT_DURATION)
 
     # ------------------------------------------------------------------
     # off() -- immediately blank the LED bar

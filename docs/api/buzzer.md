@@ -6,6 +6,10 @@ Controls the on-board piezo buzzer via I2C register `0x06`.
 
 Access via `Robot.buzzer`.
 
+The `Buzzer` is fully non-blocking.  Schedule a beep or pattern with
+`beep()` / `pattern()`, then call `update(ct)` on every main-loop iteration
+to advance the internal state machine.  No `time.sleep()` is ever called.
+
 ---
 
 ## Methods
@@ -16,7 +20,7 @@ Access via `Robot.buzzer`.
 def on(self) -> None
 ```
 
-Turn the buzzer on continuously.
+Turn the buzzer on immediately (raw hardware command).
 
 ---
 
@@ -26,7 +30,7 @@ Turn the buzzer on continuously.
 def off(self) -> None
 ```
 
-Turn the buzzer off.
+Turn the buzzer off immediately (raw hardware command).
 
 ---
 
@@ -36,16 +40,14 @@ Turn the buzzer off.
 def beep(self, duration: float = 0.2) -> None
 ```
 
-Sound the buzzer for `duration` seconds, then silence it.
+Schedule a single non-blocking beep of `duration` seconds.
+
+The buzzer turns on immediately.  `update()` will turn it off after
+`duration` seconds.  Any previously scheduled sequence is cancelled.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `duration` | `float` | `0.2` | How long to beep, in seconds |
-
-!!! note
-    `beep()` uses `time.sleep()` internally, so it blocks the calling thread.
-    For non-blocking beep patterns in a cooperative loop, call `buzzer.on()` / `buzzer.off()`
-    from separate `Task` callbacks.
 
 ---
 
@@ -55,7 +57,10 @@ Sound the buzzer for `duration` seconds, then silence it.
 def pattern(self, on_time: float, off_time: float, count: int) -> None
 ```
 
-Produce a repeated beep pattern.
+Schedule a non-blocking repeated beep pattern.
+
+The first beep starts immediately.  `update()` drives all subsequent
+on/off transitions without blocking.
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -65,24 +70,70 @@ Produce a repeated beep pattern.
 
 ---
 
+### `update(ct)`
+
+```python
+def update(self, ct: float) -> None
+```
+
+Advance the buzzer state machine.
+
+Call this on **every main-loop iteration** with `ct = time.monotonic()`.
+It is cheap (a float comparison) when nothing is scheduled.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `ct` | `float` | Current time in seconds (from `time.monotonic()`) |
+
+---
+
+### `is_active`
+
+```python
+@property
+def is_active(self) -> bool
+```
+
+`True` while a beep or pattern is in progress.
+
+---
+
 ## Examples
 
 ```python
+import time
 from raspbot import Robot
 
 with Robot() as bot:
-    # Single short beep
-    bot.buzzer.beep(0.1)
+    # Schedule a 200 ms beep -- returns immediately
+    bot.buzzer.beep(0.2)
 
-    # SOS pattern (simplified)
-    bot.buzzer.pattern(on_time=0.1, off_time=0.1, count=3)   # ...
-    bot.buzzer.pattern(on_time=0.3, off_time=0.1, count=3)   # ---
-    bot.buzzer.pattern(on_time=0.1, off_time=0.1, count=3)   # ...
+    while True:
+        ct = time.monotonic()
+        bot.buzzer.update(ct)   # drives the on/off transition
+        time.sleep(0.001)
 
-    # Manual on/off
-    bot.buzzer.on()
-    # (do something)
-    bot.buzzer.off()
+    # Wait until the beep finishes before doing something else
+    while bot.buzzer.is_active:
+        ct = time.monotonic()
+        bot.buzzer.update(ct)
+        time.sleep(0.001)
+```
+
+```python
+import time
+from raspbot import Robot
+
+with Robot() as bot:
+    # SOS pattern -- all non-blocking
+    bot.buzzer.pattern(0.1, 0.1, 3)   # ...
+
+    while bot.buzzer.is_active:
+        bot.buzzer.update(time.monotonic())
+        time.sleep(0.001)
+
+    bot.buzzer.pattern(0.3, 0.1, 3)   # ---
+    # ... and so on
 ```
 
 ---
