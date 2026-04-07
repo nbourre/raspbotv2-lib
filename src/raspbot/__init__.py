@@ -13,7 +13,12 @@ Quick start::
 
 from __future__ import annotations
 
-from raspbot.camera.opencv_camera import Camera
+try:
+    from raspbot.camera.opencv_camera import Camera
+    _CAMERA_AVAILABLE = True
+except ImportError:
+    _CAMERA_AVAILABLE = False  # type: ignore[assignment]
+
 from raspbot.exceptions import (
     DeviceNotFoundError,
     HardwareNotReadyError,

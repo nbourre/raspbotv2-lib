@@ -1,8 +1,8 @@
 site_name: raspbot
 site_description: Clean Python library for controlling the Yahboom Raspbot V2 robot car
-site_url: https://your-org.github.io/raspbot
-repo_url: https://github.com/your-org/raspbot
-repo_name: your-org/raspbot
+site_url: https://nbourre.github.io/raspbotv2-lib
+repo_url: https://github.com/nbourre/raspbotv2-lib
+repo_name: nbourre/raspbotv2-lib
 edit_uri: edit/main/docs/
 
 theme:

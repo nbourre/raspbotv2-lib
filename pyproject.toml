@@ -7,9 +7,9 @@ name = "raspbot"
 version = "0.1.0"
 description = "Clean Python library for controlling the Yahboom Raspbot V2 robot car"
 readme = "README.md"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
-authors = [{ name = "Raspbot contributors" }]
+authors = [{ name = "Nick B", email = "nbourrereg@hotmail.com" }]
 keywords = ["raspberry-pi", "robot", "yahboom", "raspbot", "hardware", "i2c"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -50,11 +50,23 @@ docs = [
 ]
 
 [project.urls]
-Repository = "https://github.com/your-org/raspbot"
-Issues = "https://github.com/your-org/raspbot/issues"
+Repository    = "https://github.com/nbourre/raspbotv2-lib"
+Issues        = "https://github.com/nbourre/raspbotv2-lib/issues"
+Documentation = "https://nbourre.github.io/raspbotv2-lib"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/raspbot"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "lib/",
+    "site/",
+    "todo.md",
+    ".coverage",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    ".pytest_cache/",
+]
 
 [tool.ruff]
 line-length = 99
