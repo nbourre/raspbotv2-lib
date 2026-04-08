@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "raspbot-v2"
+name = "raspbot"
 version = "0.1.1"
 description = "Clean Python library for controlling the Yahboom Raspbot V2 robot car"
 readme = "README.md"
