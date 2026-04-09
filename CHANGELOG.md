@@ -7,6 +7,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+
+
+## [0.1.2] - 2026-04-07
+### Changed
+- Fixed motor direction logic for diagonal movements.
+
+## [0.1.1] - 2026-04-07
+### Changed
+- Improved documentation and examples.
+
 ## [0.1.0] - 2026-04-07
 
 ### Added
