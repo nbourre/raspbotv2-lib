@@ -24,8 +24,8 @@ This produces the following motion for each motor combination:
     strafe_left        REV    FWD    FWD    REV
     diagonal_fwd_right FWD    stop   stop   FWD
     diagonal_fwd_left  stop   FWD    FWD    stop
-    diagonal_bwd_right REV    stop   stop   REV
-    diagonal_bwd_left  stop   REV    REV    stop
+    diagonal_bwd_right stop   REV    REV    stop
+    diagonal_bwd_left  REV    stop   stop   REV
 """
 
 from __future__ import annotations
@@ -201,22 +201,6 @@ class Motors:
     def diagonal_backward_right(self, speed: int = 150) -> None:
         """Drive diagonally backward-right at 45 degrees (mecanum only).
 
-        Only L1 (front-left) and R2 (rear-right) are driven in reverse.
-
-        Parameters
-        ----------
-        speed:
-            PWM duty-cycle 0-255 for the active motors.
-        """
-        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
-        self.set(MotorId.L1, MotorDirection.REVERSE, speed)
-        self.set(MotorId.L2, MotorDirection.FORWARD, 0)
-        self.set(MotorId.R1, MotorDirection.FORWARD, 0)
-        self.set(MotorId.R2, MotorDirection.REVERSE, speed)
-
-    def diagonal_backward_left(self, speed: int = 150) -> None:
-        """Drive diagonally backward-left at 45 degrees (mecanum only).
-
         Only L2 (rear-left) and R1 (front-right) are driven in reverse.
 
         Parameters
@@ -229,6 +213,22 @@ class Motors:
         self.set(MotorId.L2, MotorDirection.REVERSE, speed)
         self.set(MotorId.R1, MotorDirection.REVERSE, speed)
         self.set(MotorId.R2, MotorDirection.FORWARD, 0)
+
+    def diagonal_backward_left(self, speed: int = 150) -> None:
+        """Drive diagonally backward-left at 45 degrees (mecanum only).
+
+        Only L1 (front-left) and R2 (rear-right) are driven in reverse.
+
+        Parameters
+        ----------
+        speed:
+            PWM duty-cycle 0-255 for the active motors.
+        """
+        speed = _clamp(int(speed), _SPEED_MIN, _SPEED_MAX)
+        self.set(MotorId.L1, MotorDirection.REVERSE, speed)
+        self.set(MotorId.L2, MotorDirection.FORWARD, 0)
+        self.set(MotorId.R1, MotorDirection.FORWARD, 0)
+        self.set(MotorId.R2, MotorDirection.REVERSE, speed)
 
     def stop(self) -> None:
         """Stop all motors immediately."""
