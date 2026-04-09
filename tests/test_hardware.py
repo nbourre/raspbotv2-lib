@@ -113,20 +113,20 @@ class TestMotors:
         m = Motors(mock_bus)
         m.diagonal_backward_right(130)
         calls = mock_bus.write_block_data.call_args_list
-        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.REVERSE, 130]) in calls
-        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.FORWARD, 0]) in calls
-        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.FORWARD, 0]) in calls
-        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.FORWARD, 0]) in calls
 
     def test_diagonal_backward_left_pattern(self, mock_bus: MagicMock) -> None:
         # L1:stop  L2:REV  R1:REV  R2:stop
         m = Motors(mock_bus)
         m.diagonal_backward_left(130)
         calls = mock_bus.write_block_data.call_args_list
-        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.FORWARD, 0]) in calls
-        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.REVERSE, 130]) in calls
-        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.REVERSE, 130]) in calls
-        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.L1, MotorDirection.REVERSE, 130]) in calls
+        assert call(Reg.MOTOR, [MotorId.L2, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.R1, MotorDirection.FORWARD, 0]) in calls
+        assert call(Reg.MOTOR, [MotorId.R2, MotorDirection.REVERSE, 130]) in calls
 
     def test_strafe_clamps_speed_above_255(self, mock_bus: MagicMock) -> None:
         m = Motors(mock_bus)
